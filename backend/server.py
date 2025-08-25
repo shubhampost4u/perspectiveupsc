@@ -148,7 +148,10 @@ class Purchase(BaseModel):
     test_id: str
     amount: float
     status: str = "pending"  # pending, completed, failed
+    razorpay_order_id: Optional[str] = None
+    razorpay_payment_id: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    completed_at: Optional[datetime] = None
 
 class TestResult(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
