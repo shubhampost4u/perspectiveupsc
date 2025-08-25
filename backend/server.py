@@ -675,14 +675,69 @@ async def get_my_results(current_user: User = Depends(get_current_user)):
         if test:
             enriched_results.append({
                 "id": result["id"],
+                "test_id": result["test_id"],
                 "test_title": test["title"],
                 "score": result["score"],
                 "total_questions": result["total_questions"],
                 "percentage": round((result["score"] / result["total_questions"]) * 100, 2),
-                "completed_at": result["completed_at"]
+                "completed_at": result["completed_at"],
+                "time_taken_minutes": result.get("time_taken_minutes", 0)
             })
     
     return enriched_results
+
+@api_router.get("/test-solutions/{test_id}")
+async def get_test_solutions(test_id: str, current_user: User = Depends(get_current_user)):
+    """Get test solutions and explanations after completing the test"""
+    if current_user.role != UserRole.STUDENT:
+        raise HTTPException(status_code=403, detail="Only students can view solutions")
+    
+    # Check if student has completed the test
+    result = await db.test_results.find_one({
+        "student_id": current_user.id,
+        "test_id": test_id
+    })
+    
+    if not result:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You must complete the test before viewing solutions"
+        )
+    
+    # Get test with questions and solutions
+    test = await db.tests.find_one({"id": test_id})
+    if not test:
+        raise HTTPException(status_code=404, detail="Test not found")
+    
+    # Prepare solutions with student's answers
+    solutions = []
+    student_answers = result.get("answers", [])
+    
+    for i, question in enumerate(test["questions"]):
+        student_answer = student_answers[i] if i < len(student_answers) else -1
+        is_correct = student_answer == question["correct_answer"]
+        
+        solutions.append({
+            "question_number": i + 1,
+            "question_text": question["question_text"],
+            "options": question["options"],
+            "correct_answer": question["correct_answer"],
+            "correct_option": question["options"][question["correct_answer"]],
+            "student_answer": student_answer,
+            "student_option": question["options"][student_answer] if 0 <= student_answer < len(question["options"]) else "Not answered",
+            "is_correct": is_correct,
+            "explanation": question.get("explanation", "No explanation provided")
+        })
+    
+    return {
+        "test_id": test_id,
+        "test_title": test["title"],
+        "student_score": result["score"],
+        "total_questions": result["total_questions"],
+        "percentage": round((result["score"] / result["total_questions"]) * 100, 2),
+        "completed_at": result["completed_at"],
+        "solutions": solutions
+    }
 
 @api_router.get("/debug-users")
 async def debug_users():
