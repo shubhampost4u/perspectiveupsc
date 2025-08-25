@@ -31,6 +31,8 @@ const StudentDashboard = () => {
   const [purchasedTests, setPurchasedTests] = useState([]);
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [selectedTest, setSelectedTest] = useState(null);
 
   useEffect(() => {
     fetchAvailableTests();
