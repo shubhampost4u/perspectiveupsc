@@ -430,6 +430,19 @@ const StudentDashboard = () => {
           </TabsContent>
         </Tabs>
       </main>
+
+      {/* Payment Dialog */}
+      <PaymentDialog
+        isOpen={showPaymentDialog}
+        onClose={() => {
+          setShowPaymentDialog(false);
+          setSelectedTest(null);
+        }}
+        test={selectedTest}
+        user={user}
+        token={token}
+        onPaymentSuccess={handlePaymentSuccess}
+      />
     </div>
   );
 };
