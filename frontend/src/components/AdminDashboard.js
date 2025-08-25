@@ -735,7 +735,7 @@ const AdminDashboard = () => {
                   <CardHeader className="pb-3">
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-lg">{test.title}</CardTitle>
-                      <Badge variant="secondary">${test.price}</Badge>
+                      <Badge variant="secondary">₹{test.price}</Badge>
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-4">
