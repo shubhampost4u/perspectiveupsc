@@ -415,6 +415,20 @@ async def get_my_results(current_user: User = Depends(get_current_user)):
     
     return enriched_results
 
+@api_router.get("/debug-users")
+async def debug_users():
+    """Debug endpoint to check users in database"""
+    users = await db.users.find({}).to_list(100)
+    result = []
+    for user in users:
+        result.append({
+            "email": user.get("email"),
+            "role": user.get("role"),
+            "id": user.get("id"),
+            "name": user.get("name")
+        })
+    return {"users": result, "count": len(result)}
+
 # ===== BASIC ROUTES =====
 @api_router.get("/")
 async def root():
