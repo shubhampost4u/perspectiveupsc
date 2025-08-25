@@ -254,6 +254,14 @@ const StudentDashboard = () => {
                               <CheckCircle2 className="w-4 h-4 mr-1" />
                               Completed - {getTestResult(test.id)?.percentage}%
                             </Badge>
+                            <Button
+                              onClick={() => navigate(`/solutions/${test.id}`)}
+                              variant="outline"
+                              size="sm"
+                              className="w-full text-blue-600 border-blue-600 hover:bg-blue-50"
+                            >
+                              View Solutions
+                            </Button>
                           </div>
                         ) : (
                           <Button 
