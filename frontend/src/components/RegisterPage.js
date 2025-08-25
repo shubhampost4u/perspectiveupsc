@@ -30,10 +30,7 @@ const RegisterPage = () => {
   };
 
   const handleRoleChange = (value) => {
-    setFormData({
-      ...formData,
-      role: value
-    });
+    // Removed - role selection no longer available
   };
 
   const handleSubmit = async (e) => {
