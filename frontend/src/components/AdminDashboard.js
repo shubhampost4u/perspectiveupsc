@@ -39,6 +39,10 @@ const AdminDashboard = () => {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showCreateTest, setShowCreateTest] = useState(false);
+  const [showBulkUpload, setShowBulkUpload] = useState(false);
+  const [bulkFile, setBulkFile] = useState(null);
+  const [bulkQuestions, setBulkQuestions] = useState([]);
+  const [uploadFormatInfo, setUploadFormatInfo] = useState(null);
 
   const [testForm, setTestForm] = useState({
     title: '',
