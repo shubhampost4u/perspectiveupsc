@@ -345,7 +345,7 @@ const AdminDashboard = () => {
                     </div>
                     <div>
                       <p className="text-2xl font-bold text-gray-900">
-                        ${tests.reduce((sum, test) => sum + test.price, 0).toFixed(2)}
+                        ₹{tests.reduce((sum, test) => sum + test.price, 0).toFixed(2)}
                       </p>
                       <p className="text-gray-600">Total Value</p>
                     </div>
