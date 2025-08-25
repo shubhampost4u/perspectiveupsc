@@ -255,13 +255,17 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     try:
         token = credentials.credentials
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        email: str = payload.get("sub")
-        if email is None:
+        token_subject: str = payload.get("sub")
+        if token_subject is None:
             raise credentials_exception
     except jwt.PyJWTError:
         raise credentials_exception
     
-    user = await db.users.find_one({"email": email})
+    # Try to find user by email first, then by mobile
+    user = await db.users.find_one({"email": token_subject})
+    if not user:
+        user = await db.users.find_one({"mobile": token_subject})
+    
     if user is None:
         raise credentials_exception
     return User(**user)
