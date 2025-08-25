@@ -7,6 +7,7 @@ import { Textarea } from './ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Badge } from './ui/badge';
+import { Alert, AlertDescription } from './ui/alert';
 import { 
   Plus, 
   BookOpen, 
@@ -18,7 +19,12 @@ import {
   Trash2,
   Clock,
   DollarSign,
-  CheckCircle2
+  CheckCircle2,
+  Upload,
+  Download,
+  FileSpreadsheet,
+  AlertCircle,
+  Info
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '../App';
