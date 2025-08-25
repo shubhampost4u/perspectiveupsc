@@ -7,7 +7,7 @@ class SecurityUpdateTester:
     def __init__(self, base_url=None):
         if base_url is None:
             # Use the public endpoint for testing
-            base_url = "https://testify-5.preview.emergentagent.com/api"
+            base_url = "https://upscpractice.preview.emergentagent.com/api"
         self.base_url = base_url
         self.admin_token = None
         self.student_token = None

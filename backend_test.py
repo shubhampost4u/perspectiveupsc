@@ -8,7 +8,7 @@ class TestPlatformAPITester:
         if base_url is None:
             # Use environment variable or default for current deployment
             import os
-            frontend_url = os.environ.get('REACT_APP_BACKEND_URL', 'https://testify-5.preview.emergentagent.com')
+            frontend_url = os.environ.get('REACT_APP_BACKEND_URL', 'https://upscpractice.preview.emergentagent.com')
             base_url = f"{frontend_url}/api"
         self.base_url = base_url
         self.admin_token = None
