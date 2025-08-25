@@ -226,7 +226,7 @@ const StudentDashboard = () => {
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-lg">{test.title}</CardTitle>
                       <Badge variant="outline" className="text-green-600 border-green-600">
-                        ${test.price}
+                        ₹{test.price}
                       </Badge>
                     </div>
                   </CardHeader>
