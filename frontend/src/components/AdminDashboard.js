@@ -481,7 +481,7 @@ const AdminDashboard = () => {
                                   />
                                 </div>
                                 <div>
-                                  <Label>Price ($)</Label>
+                                  <Label>Price (₹)</Label>
                                   <Input
                                     name="price"
                                     type="number"
