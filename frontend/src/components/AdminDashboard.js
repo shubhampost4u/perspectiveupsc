@@ -366,6 +366,179 @@ const AdminDashboard = () => {
                       Create New Test
                     </Button>
                   </DialogTrigger>
+
+                <Dialog open={showBulkUpload} onOpenChange={setShowBulkUpload}>
+                  <DialogTrigger asChild>
+                    <Button className="h-20 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800">
+                      <Upload className="w-5 h-5 mr-2" />
+                      Bulk Upload Questions
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>Bulk Upload Questions from Excel</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-6">
+                      {/* Format Information */}
+                      <Alert>
+                        <Info className="h-4 w-4" />
+                        <AlertDescription>
+                          <div className="space-y-2">
+                            <p className="font-semibold">Excel File Format Requirements:</p>
+                            {uploadFormatInfo && (
+                              <div className="space-y-1 text-sm">
+                                <p><strong>Required Columns:</strong> {uploadFormatInfo.required_columns.join(', ')}</p>
+                                <div className="mt-2">
+                                  <p><strong>Format Rules:</strong></p>
+                                  <ul className="list-disc list-inside ml-4 space-y-1">
+                                    {uploadFormatInfo.format_rules.map((rule, index) => (
+                                      <li key={index}>{rule}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+                                <div className="mt-2">
+                                  <p><strong>Sample Row:</strong></p>
+                                  <div className="bg-gray-50 p-2 rounded text-xs">
+                                    Question: {uploadFormatInfo.sample_data.question_text}<br/>
+                                    Options: A) {uploadFormatInfo.sample_data.option_a}, B) {uploadFormatInfo.sample_data.option_b}<br/>
+                                    Correct: {uploadFormatInfo.sample_data.correct_answer}<br/>
+                                    Explanation: {uploadFormatInfo.sample_data.explanation}
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </AlertDescription>
+                      </Alert>
+
+                      {/* File Upload */}
+                      <div className="space-y-4">
+                        <div>
+                          <Label>Select Excel File</Label>
+                          <Input
+                            type="file"
+                            accept=".xlsx,.xls"
+                            onChange={handleBulkFileUpload}
+                            className="mt-2"
+                          />
+                          {bulkFile && (
+                            <p className="text-sm text-green-600 mt-2">
+                              <FileSpreadsheet className="w-4 h-4 inline mr-1" />
+                              {bulkFile.name} selected
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Questions Preview */}
+                        {bulkQuestions.length > 0 && (
+                          <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                              <h3 className="text-lg font-semibold">
+                                Processed Questions ({bulkQuestions.length})
+                              </h3>
+                              <Badge variant="success" className="bg-green-100 text-green-800">
+                                <CheckCircle2 className="w-4 h-4 mr-1" />
+                                Ready to Create Test
+                              </Badge>
+                            </div>
+                            
+                            <div className="max-h-60 overflow-y-auto space-y-2 border rounded p-4">
+                              {bulkQuestions.slice(0, 5).map((q, index) => (
+                                <Card key={index} className="p-3">
+                                  <div className="space-y-2">
+                                    <p className="font-medium text-sm">Q{index + 1}: {q.question_text}</p>
+                                    <div className="grid grid-cols-2 gap-2 text-xs">
+                                      {q.options.map((option, optIndex) => (
+                                        <span key={optIndex} className={`${
+                                          optIndex === q.correct_answer ? 'text-green-600 font-medium' : 'text-gray-600'
+                                        }`}>
+                                          {String.fromCharCode(65 + optIndex)}) {option}
+                                        </span>
+                                      ))}
+                                    </div>
+                                    <p className="text-xs text-blue-600">Explanation: {q.explanation}</p>
+                                  </div>
+                                </Card>
+                              ))}
+                              {bulkQuestions.length > 5 && (
+                                <p className="text-center text-sm text-gray-500">
+                                  ... and {bulkQuestions.length - 5} more questions
+                                </p>
+                              )}
+                            </div>
+
+                            {/* Test Details for Bulk Upload */}
+                            <div className="space-y-4 border-t pt-4">
+                              <h3 className="text-lg font-semibold">Test Details</h3>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                  <Label>Test Title</Label>
+                                  <Input
+                                    name="title"
+                                    value={testForm.title}
+                                    onChange={handleTestFormChange}
+                                    placeholder="Enter test title"
+                                  />
+                                </div>
+                                <div>
+                                  <Label>Price ($)</Label>
+                                  <Input
+                                    name="price"
+                                    type="number"
+                                    step="0.01"
+                                    value={testForm.price}
+                                    onChange={handleTestFormChange}
+                                    placeholder="Enter price"
+                                  />
+                                </div>
+                              </div>
+                              <div>
+                                <Label>Description</Label>
+                                <Textarea
+                                  name="description"
+                                  value={testForm.description}
+                                  onChange={handleTestFormChange}
+                                  placeholder="Enter test description"
+                                  rows={3}
+                                />
+                              </div>
+                              <div>
+                                <Label>Duration (minutes)</Label>
+                                <Input
+                                  name="duration_minutes"
+                                  type="number"
+                                  value={testForm.duration_minutes}
+                                  onChange={handleTestFormChange}
+                                  placeholder="Enter duration in minutes"
+                                />
+                              </div>
+                            </div>
+
+                            <div className="flex justify-end space-x-4 pt-4 border-t">
+                              <Button
+                                variant="outline"
+                                onClick={() => {
+                                  setShowBulkUpload(false);
+                                  setBulkFile(null);
+                                  setBulkQuestions([]);
+                                }}
+                              >
+                                Cancel
+                              </Button>
+                              <Button
+                                onClick={createTestFromBulk}
+                                disabled={loading}
+                                className="bg-gradient-to-r from-green-600 to-green-700"
+                              >
+                                {loading ? 'Creating...' : 'Create Test'}
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
                   <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                       <DialogTitle>Create New Test</DialogTitle>
