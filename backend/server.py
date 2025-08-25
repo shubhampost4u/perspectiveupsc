@@ -357,69 +357,6 @@ async def reset_password(request: ResetPasswordRequest):
     
     return {"message": "Password reset successfully"}
 
-@api_router.post("/forgot-password")
-async def forgot_password(request: ForgotPasswordRequest):
-    """Send password reset token to user's email"""
-    user = await db.users.find_one({"email": request.email})
-    if not user:
-        # Don't reveal if email exists or not for security
-        return {"message": "If the email exists, a password reset link has been sent"}
-    
-    # Generate reset token (in production, use a more secure method)
-    reset_token = secrets.token_urlsafe(32)
-    expiry = datetime.now(timezone.utc) + timedelta(hours=1)
-    
-    # Store reset token in database (you might want a separate collection for this)
-    await db.password_resets.insert_one({
-        "email": request.email,
-        "token": reset_token,
-        "expiry": expiry,
-        "used": False
-    })
-    
-    # Send password reset email
-    await send_reset_email(request.email, reset_token)
-    
-    return {"message": "If the email exists, a password reset link has been sent"}
-
-@api_router.post("/reset-password")
-async def reset_password(request: ResetPasswordRequest):
-    """Reset password using reset token"""
-    # Find valid reset token
-    reset_record = await db.password_resets.find_one({
-        "email": request.email,
-        "token": request.reset_token,
-        "used": False
-    })
-    
-    if not reset_record:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid or expired reset token"
-        )
-    
-    # Check if token has expired
-    if datetime.now(timezone.utc) > reset_record["expiry"]:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Reset token has expired"
-        )
-    
-    # Update user password
-    hashed_password = get_password_hash(request.new_password)
-    await db.users.update_one(
-        {"email": request.email},
-        {"$set": {"password": hashed_password}}
-    )
-    
-    # Mark reset token as used
-    await db.password_resets.update_one(
-        {"_id": reset_record["_id"]},
-        {"$set": {"used": True}}
-    )
-    
-    return {"message": "Password has been reset successfully"}
-
 # ===== ADMIN ROUTES =====
 @api_router.post("/admin/tests", response_model=TestResponse)
 async def create_test(test: TestCreate, admin: User = Depends(require_admin)):
