@@ -388,6 +388,147 @@ async def get_students(admin: User = Depends(require_admin)):
     students = await db.users.find({"role": UserRole.STUDENT}).to_list(1000)
     return [UserResponse(**student) for student in students]
 
+@api_router.get("/admin/bulk-upload-format")
+async def get_bulk_upload_format(admin: User = Depends(require_admin)):
+    """Get the format requirements for bulk question upload"""
+    return {
+        "message": "Excel file format for bulk question upload",
+        "required_columns": [
+            "question_text",
+            "option_a", 
+            "option_b",
+            "option_c", 
+            "option_d",
+            "correct_answer",
+            "explanation"
+        ],
+        "format_rules": [
+            "Save file as .xlsx format",
+            "First row should contain column headers exactly as shown above",
+            "question_text: The question content",
+            "option_a, option_b, option_c, option_d: The four answer options", 
+            "correct_answer: Must be 'A', 'B', 'C', or 'D' (case insensitive)",
+            "explanation: Detailed solution explanation for the question",
+            "Maximum 100 questions per upload",
+            "All fields are required - no empty cells allowed"
+        ],
+        "sample_data": {
+            "question_text": "What is the capital of India?",
+            "option_a": "Mumbai",
+            "option_b": "New Delhi", 
+            "option_c": "Kolkata",
+            "option_d": "Chennai",
+            "correct_answer": "B",
+            "explanation": "New Delhi is the capital city of India. It serves as the seat of all three branches of the Government of India."
+        }
+    }
+
+@api_router.post("/admin/bulk-upload-questions")
+async def bulk_upload_questions(
+    file: UploadFile = File(...),
+    admin: User = Depends(require_admin)
+):
+    """Upload questions in bulk from Excel file"""
+    
+    # Validate file type
+    if not file.filename.endswith(('.xlsx', '.xls')):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Only Excel files (.xlsx, .xls) are allowed"
+        )
+    
+    try:
+        # Read Excel file
+        content = await file.read()
+        df = pd.read_excel(BytesIO(content))
+        
+        # Validate required columns
+        required_columns = ['question_text', 'option_a', 'option_b', 'option_c', 'option_d', 'correct_answer', 'explanation']
+        missing_columns = [col for col in required_columns if col not in df.columns]
+        
+        if missing_columns:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Missing required columns: {', '.join(missing_columns)}"
+            )
+        
+        # Validate data
+        if len(df) == 0:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Excel file is empty"
+            )
+        
+        if len(df) > 100:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Maximum 100 questions allowed per upload"
+            )
+        
+        # Process questions
+        questions = []
+        errors = []
+        
+        for index, row in df.iterrows():
+            try:
+                # Check for empty cells
+                if row.isna().any():
+                    errors.append(f"Row {index + 2}: Contains empty cells")
+                    continue
+                
+                # Validate correct answer
+                correct_answer = str(row['correct_answer']).upper().strip()
+                if correct_answer not in ['A', 'B', 'C', 'D']:
+                    errors.append(f"Row {index + 2}: correct_answer must be A, B, C, or D")
+                    continue
+                
+                # Convert correct answer to index
+                correct_index = ord(correct_answer) - ord('A')
+                
+                # Create question
+                question = Question(
+                    question_text=str(row['question_text']).strip(),
+                    options=[
+                        str(row['option_a']).strip(),
+                        str(row['option_b']).strip(), 
+                        str(row['option_c']).strip(),
+                        str(row['option_d']).strip()
+                    ],
+                    correct_answer=correct_index,
+                    explanation=str(row['explanation']).strip()
+                )
+                questions.append(question)
+                
+            except Exception as e:
+                errors.append(f"Row {index + 2}: {str(e)}")
+        
+        if errors:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={
+                    "message": "Validation errors found",
+                    "errors": errors[:10],  # Show first 10 errors
+                    "total_errors": len(errors)
+                }
+            )
+        
+        return {
+            "message": f"Successfully processed {len(questions)} questions",
+            "questions": [q.dict() for q in questions],
+            "count": len(questions)
+        }
+        
+    except pd.errors.EmptyDataError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Excel file is empty or corrupted"
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error processing file: {str(e)}"
+        )
+
 # ===== STUDENT ROUTES =====
 @api_router.get("/tests", response_model=List[TestResponse])
 async def get_available_tests():
