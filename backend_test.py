@@ -268,59 +268,95 @@ class TestPlatformAPITester:
             200
         )
         
-        # Test purchasing a test
-        if self.test_id:
-            success, response = self.run_test(
-                "Purchase Test",
-                "POST",
-                f"tests/{self.test_id}/purchase",
-                200,
-                token=self.student_token
-            )
-        
-        # Test getting purchased tests
+        # Test getting purchased tests (should be empty initially)
         success, response = self.run_test(
-            "Get Purchased Tests",
+            "Get Purchased Tests (Empty)",
             "GET",
             "my-tests",
             200,
             token=self.student_token
         )
         
-        # Test getting test for taking
-        if self.test_id:
-            success, response = self.run_test(
-                "Get Test for Taking",
-                "GET",
-                f"tests/{self.test_id}/take",
-                200,
-                token=self.student_token
-            )
-        
-        # Test submitting test
-        if self.test_id:
-            submit_data = {
-                "answers": [1, 1],  # Both correct answers
-                "time_taken_minutes": 15
-            }
-            
-            success, response = self.run_test(
-                "Submit Test",
-                "POST",
-                f"tests/{self.test_id}/submit",
-                200,
-                data=submit_data,
-                token=self.student_token
-            )
-        
-        # Test getting results
+        # Test getting results (should be empty initially)
         success, response = self.run_test(
-            "Get My Results",
+            "Get My Results (Empty)",
             "GET",
             "my-results",
             200,
             token=self.student_token
         )
+        
+        return True
+
+    def test_payment_integration(self):
+        """Test Razorpay payment integration"""
+        print("\n" + "="*50)
+        print("TESTING RAZORPAY PAYMENT INTEGRATION")
+        print("="*50)
+        
+        if not self.student_token or not self.test_id:
+            print("❌ No student token or test ID available, skipping payment tests")
+            return False
+        
+        # Test creating payment order
+        success, response = self.run_test(
+            "Create Payment Order",
+            "POST",
+            f"tests/{self.test_id}/purchase",
+            200,
+            token=self.student_token
+        )
+        
+        order_id = None
+        if success and 'order_id' in response:
+            order_id = response['order_id']
+            print(f"   Payment order created: {order_id}")
+            print(f"   Amount: {response.get('amount', 'N/A')} paise")
+            print(f"   Currency: {response.get('currency', 'N/A')}")
+            print(f"   Key ID: {response.get('key_id', 'N/A')}")
+            print(f"   Test Title: {response.get('test_title', 'N/A')}")
+        
+        # Test duplicate purchase prevention
+        success, response = self.run_test(
+            "Prevent Duplicate Purchase Order",
+            "POST",
+            f"tests/{self.test_id}/purchase",
+            400,  # Should fail with 400 for duplicate
+            token=self.student_token
+        )
+        
+        # Test payment verification with invalid signature (should fail)
+        if order_id:
+            invalid_verification = {
+                "razorpay_order_id": order_id,
+                "razorpay_payment_id": "pay_test_invalid",
+                "razorpay_signature": "invalid_signature"
+            }
+            
+            success, response = self.run_test(
+                "Payment Verification (Invalid Signature)",
+                "POST",
+                "verify-payment",
+                400,  # Should fail with invalid signature
+                data=invalid_verification,
+                token=self.student_token
+            )
+        
+        # Test unauthorized payment verification
+        if order_id:
+            verification_data = {
+                "razorpay_order_id": order_id,
+                "razorpay_payment_id": "pay_test_123",
+                "razorpay_signature": "test_signature"
+            }
+            
+            success, response = self.run_test(
+                "Payment Verification (No Auth)",
+                "POST",
+                "verify-payment",
+                401,  # Should fail without authentication
+                data=verification_data
+            )
         
         return True
 
