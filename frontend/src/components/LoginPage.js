@@ -115,6 +115,12 @@ const LoginPage = () => {
           <div className="animate-scale-in">
             <Card className="glass-card shadow-2xl border-0 max-w-md mx-auto">
               <CardHeader className="space-y-2 text-center pb-4">
+                <div className="mb-4">
+                  <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
+                    PerspectiveUPSC
+                  </h1>
+                  <div className="w-20 h-1 bg-gradient-to-r from-blue-600 to-purple-600 mx-auto rounded-full"></div>
+                </div>
                 <CardTitle className="text-3xl font-bold text-gray-900">Welcome Back</CardTitle>
                 <p className="text-gray-600">Sign in to your account to continue</p>
               </CardHeader>
