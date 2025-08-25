@@ -289,52 +289,24 @@ async def require_admin(current_user: User = Depends(get_current_user)):
 # ===== AUTHENTICATION ROUTES =====
 @api_router.post("/register", response_model=UserResponse)
 async def register_user(user: UserCreate):
-    # Validate that either email+password OR mobile is provided
-    if user.email and user.password:
-        # Email registration
-        existing_user = await db.users.find_one({"email": user.email})
-        if existing_user:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Email already registered"
-            )
-        
-        # Hash password and create user
-        hashed_password = get_password_hash(user.password)
-        user_data = user.dict()
-        user_data["password"] = hashed_password
-        user_data["role"] = UserRole.STUDENT  # Force student role
-        
-        new_user = User(**user_data)
-        await db.users.insert_one(new_user.dict())
-        
-        return UserResponse(**new_user.dict())
+    # Check if email already exists
+    existing_user = await db.users.find_one({"email": user.email})
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already registered"
+        )
     
-    elif user.mobile:
-        # Mobile registration - requires OTP verification first
-        if not validate_indian_mobile(user.mobile):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid Indian mobile number"
-            )
-        
-        formatted_mobile = format_mobile_number(user.mobile)
-        existing_user = await db.users.find_one({"mobile": formatted_mobile})
-        if existing_user:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Mobile number already registered"
-            )
-        
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Mobile registration requires OTP verification. Use /send-otp first."
-        )
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Either email+password or mobile number is required"
-        )
+    # Hash password and create user
+    hashed_password = get_password_hash(user.password)
+    user_data = user.dict()
+    user_data["password"] = hashed_password
+    user_data["role"] = UserRole.STUDENT  # Force student role
+    
+    new_user = User(**user_data)
+    await db.users.insert_one(new_user.dict())
+    
+    return UserResponse(**new_user.dict())
 
 
 
