@@ -149,11 +149,25 @@ class TestPlatformAPITester:
             print("❌ No admin token available, skipping admin tests")
             return False
         
-        # Test creating a test
+        # Test getting existing admin tests first
+        success, response = self.run_test(
+            "Get Existing Admin Tests",
+            "GET",
+            "admin/tests",
+            200,
+            token=self.admin_token
+        )
+        
+        existing_tests = response if success else []
+        if existing_tests:
+            self.test_id = existing_tests[0]['id']
+            print(f"   Using existing test ID: {self.test_id}")
+        
+        # Test creating a new test
         test_data = {
-            "title": "Sample Math Test",
-            "description": "A basic math test for testing purposes",
-            "price": 9.99,
+            "title": "Sample Payment Test",
+            "description": "A test for payment integration testing",
+            "price": 99.0,
             "duration_minutes": 30,
             "questions": [
                 {
@@ -172,7 +186,7 @@ class TestPlatformAPITester:
         }
         
         success, response = self.run_test(
-            "Create Test",
+            "Create New Test",
             "POST",
             "admin/tests",
             200,
@@ -182,16 +196,7 @@ class TestPlatformAPITester:
         
         if success and 'id' in response:
             self.test_id = response['id']
-            print(f"   Test created with ID: {self.test_id}")
-        
-        # Test getting admin tests
-        success, response = self.run_test(
-            "Get Admin Tests",
-            "GET",
-            "admin/tests",
-            200,
-            token=self.admin_token
-        )
+            print(f"   New test created with ID: {self.test_id}")
         
         # Test getting students
         success, response = self.run_test(
