@@ -152,6 +152,12 @@ function App() {
               </ProtectedRoute>
             } />
 
+            <Route path="/solutions/:testId" element={
+              <ProtectedRoute>
+                <TestSolutions />
+              </ProtectedRoute>
+            } />
+
             {/* Default redirect */}
             <Route path="/" element={
               <Navigate to="/login" replace />
