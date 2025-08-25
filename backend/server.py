@@ -84,12 +84,10 @@ class User(UserBase):
 
 class UserResponse(BaseModel):
     id: str
-    email: Optional[str] = None
-    mobile: Optional[str] = None
+    email: str
     name: str
     role: str
     is_active: bool
-    mobile_verified: Optional[bool] = False
 
 class Token(BaseModel):
     access_token: str
