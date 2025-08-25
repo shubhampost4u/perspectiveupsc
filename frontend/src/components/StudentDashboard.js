@@ -336,6 +336,14 @@ const StudentDashboard = () => {
                             <p className="text-xs text-gray-500 text-center">
                               Completed on {new Date(getTestResult(test.id)?.completed_at).toLocaleDateString()}
                             </p>
+                            <Button
+                              onClick={() => navigate(`/solutions/${test.id}`)}
+                              variant="outline"
+                              size="sm"
+                              className="w-full text-blue-600 border-blue-600 hover:bg-blue-50"
+                            >
+                              View Solutions
+                            </Button>
                           </div>
                         ) : (
                           <Button 
