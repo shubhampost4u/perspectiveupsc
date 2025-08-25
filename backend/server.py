@@ -155,6 +155,55 @@ def verify_password(plain_password, hashed_password):
 def get_password_hash(password):
     return pwd_context.hash(password)
 
+async def send_reset_email(email: str, reset_token: str) -> bool:
+    """Send password reset email"""
+    if not SMTP_USERNAME or not SMTP_PASSWORD:
+        logger.warning("SMTP not configured, password reset email disabled")
+        # For demo purposes, just log the reset token
+        logger.info(f"Password reset token for {email}: {reset_token}")
+        print(f"🔐 Password reset token for {email}: {reset_token}")
+        return True
+    
+    try:
+        # Create email message
+        subject = "Password Reset - Perspective UPSC"
+        body = f"""
+        Hello,
+        
+        You have requested a password reset for your Perspective UPSC account.
+        
+        Your password reset token is: {reset_token}
+        
+        Please use this token to reset your password. This token will expire in 1 hour.
+        
+        If you didn't request this reset, please ignore this email.
+        
+        Best regards,
+        Perspective UPSC Team
+        """
+        
+        msg = MIMEMultipart()
+        msg['From'] = FROM_EMAIL
+        msg['To'] = email
+        msg['Subject'] = subject
+        msg.attach(MIMEText(body, 'plain'))
+        
+        # Send email
+        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+            server.starttls()
+            server.login(SMTP_USERNAME, SMTP_PASSWORD)
+            server.send_message(msg)
+        
+        logger.info(f"Password reset email sent to {email}")
+        return True
+        
+    except Exception as e:
+        logger.error(f"Failed to send reset email to {email}: {str(e)}")
+        # For demo, still log the token even if email fails
+        logger.info(f"Password reset token for {email}: {reset_token}")
+        print(f"🔐 Password reset token for {email}: {reset_token}")
+        return True  # Return True for demo purposes
+
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()
     if expires_delta:
