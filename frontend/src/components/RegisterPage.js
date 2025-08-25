@@ -111,17 +111,11 @@ const RegisterPage = () => {
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="role" className="text-gray-700 font-medium">Account Type</Label>
-                <Select value={formData.role} onValueChange={handleRoleChange}>
-                  <SelectTrigger className="h-12 bg-white/90 border-gray-200 focus:border-purple-500 focus:ring-purple-500/20">
-                    <SelectValue placeholder="Select account type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="student">Student - Take Tests</SelectItem>
-                    <SelectItem value="admin">Admin - Create Tests</SelectItem>
-                  </SelectContent>
-                </Select>
+              <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <p className="text-sm text-blue-700">
+                  <strong>Note:</strong> All new registrations create student accounts. 
+                  If you need admin access, please contact the administrator.
+                </p>
               </div>
 
               <Button
