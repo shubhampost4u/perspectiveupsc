@@ -321,9 +321,8 @@ async def forgot_password(request: ForgotPasswordRequest):
         "used": False
     })
     
-    # In production, send email with reset link
-    logger.info(f"Password reset token for {request.email}: {reset_token}")
-    print(f"🔑 Password reset token for {request.email}: {reset_token}")
+    # Send password reset email
+    await send_reset_email(request.email, reset_token)
     
     return {"message": "If the email exists, a password reset link has been sent"}
 
