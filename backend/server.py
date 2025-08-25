@@ -207,16 +207,19 @@ async def login_user(user_credentials: UserLogin):
             detail="Incorrect email or password"
         )
     
-    # Debug logging
-    logger.info(f"Login user from DB: role={user.get('role')}, id={user.get('id')}")
-    
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"sub": user["email"]}, expires_delta=access_token_expires
     )
     
-    user_response = UserResponse(**user)
-    logger.info(f"UserResponse created: role={user_response.role}, id={user_response.id}")
+    # Create UserResponse directly from database fields
+    user_response = UserResponse(
+        id=user["id"],
+        email=user["email"],
+        name=user["name"],
+        role=user["role"],
+        is_active=user["is_active"]
+    )
     
     return Token(
         access_token=access_token,
