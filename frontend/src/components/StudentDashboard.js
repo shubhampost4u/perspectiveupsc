@@ -74,19 +74,14 @@ const StudentDashboard = () => {
     }
   };
 
-  const purchaseTest = async (testId) => {
-    setLoading(true);
-    try {
-      await axios.post(`${API}/tests/${testId}/purchase`, {}, axiosConfig);
-      toast.success('Test purchased successfully!');
-      fetchPurchasedTests();
-      fetchAvailableTests();
-    } catch (error) {
-      console.error('Error purchasing test:', error);
-      toast.error(error.response?.data?.detail || 'Failed to purchase test');
-    } finally {
-      setLoading(false);
-    }
+  const purchaseTest = async (test) => {
+    setSelectedTest(test);
+    setShowPaymentDialog(true);
+  };
+
+  const handlePaymentSuccess = () => {
+    fetchPurchasedTests();
+    fetchAvailableTests();
   };
 
   const startTest = (testId) => {
