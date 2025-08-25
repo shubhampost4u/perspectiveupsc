@@ -563,17 +563,110 @@ async def purchase_test(test_id: str, current_user: User = Depends(get_current_u
     if existing_purchase:
         raise HTTPException(status_code=400, detail="Test already purchased")
     
-    # For MVP, we'll mark as completed without actual payment
-    # In production, integrate with Stripe here
-    purchase = Purchase(
-        student_id=current_user.id,
-        test_id=test_id,
-        amount=test["price"],
-        status="completed"
-    )
+    if not razorpay_client:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Payment gateway not configured"
+        )
     
-    await db.purchases.insert_one(purchase.dict())
-    return {"message": "Test purchased successfully"}
+    # Create Razorpay order
+    amount_in_paise = int(test["price"] * 100)  # Convert to paise
+    
+    try:
+        razorpay_order = razorpay_client.order.create({
+            "amount": amount_in_paise,
+            "currency": "INR",
+            "payment_capture": 1
+        })
+        
+        # Store payment order in database
+        purchase = Purchase(
+            student_id=current_user.id,
+            test_id=test_id,
+            amount=test["price"],
+            status="pending",
+            razorpay_order_id=razorpay_order["id"]
+        )
+        
+        await db.purchases.insert_one(purchase.dict())
+        
+        return {
+            "order_id": razorpay_order["id"],
+            "amount": amount_in_paise,
+            "currency": "INR",
+            "key_id": RAZORPAY_KEY_ID,
+            "test_title": test["title"],
+            "student_name": current_user.name,
+            "student_email": current_user.email
+        }
+        
+    except Exception as e:
+        logger.error(f"Error creating Razorpay order: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to create payment order"
+        )
+
+@api_router.post("/verify-payment")
+async def verify_payment(
+    verification: PaymentVerification,
+    current_user: User = Depends(get_current_user)
+):
+    if current_user.role != UserRole.STUDENT:
+        raise HTTPException(status_code=403, detail="Only students can verify payments")
+    
+    if not razorpay_client:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Payment gateway not configured"
+        )
+    
+    try:
+        # Verify payment signature
+        params_dict = {
+            'razorpay_order_id': verification.razorpay_order_id,
+            'razorpay_payment_id': verification.razorpay_payment_id,
+            'razorpay_signature': verification.razorpay_signature
+        }
+        
+        razorpay_client.utility.verify_payment_signature(params_dict)
+        
+        # Update purchase status
+        result = await db.purchases.update_one(
+            {
+                "student_id": current_user.id,
+                "razorpay_order_id": verification.razorpay_order_id,
+                "status": "pending"
+            },
+            {
+                "$set": {
+                    "status": "completed",
+                    "razorpay_payment_id": verification.razorpay_payment_id,
+                    "completed_at": datetime.now(timezone.utc)
+                }
+            }
+        )
+        
+        if result.modified_count == 0:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Purchase record not found"
+            )
+        
+        return {"message": "Payment verified successfully", "status": "success"}
+        
+    except razorpay.errors.SignatureVerificationError:
+        logger.error("Payment signature verification failed")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Payment verification failed"
+        )
+    except Exception as e:
+        logger.error(f"Error verifying payment: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Payment verification failed"
+        )
 
 @api_router.get("/my-tests", response_model=List[TestResponse])
 async def get_purchased_tests(current_user: User = Depends(get_current_user)):
