@@ -62,8 +62,8 @@ const RegisterPage = () => {
             <div className="w-16 h-16 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
               <UserPlus className="w-8 h-8 text-white" />
             </div>
-            <CardTitle className="text-3xl font-bold text-gray-900">Create Account</CardTitle>
-            <p className="text-gray-600">Join our learning platform today</p>
+            <CardTitle className="text-3xl font-bold text-gray-900">Create Student Account</CardTitle>
+            <p className="text-gray-600">Join our UPSC learning platform</p>
           </CardHeader>
           
           <CardContent className="space-y-6">
