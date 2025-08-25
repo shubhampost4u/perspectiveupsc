@@ -169,6 +169,71 @@ def verify_password(plain_password, hashed_password):
 def get_password_hash(password):
     return pwd_context.hash(password)
 
+def format_mobile_number(mobile: str) -> str:
+    """Format mobile number to E.164 format for India"""
+    # Remove all non-digit characters
+    mobile = re.sub(r'\D', '', mobile)
+    
+    # If it starts with 91, assume it's already with country code
+    if mobile.startswith('91') and len(mobile) == 12:
+        return f"+{mobile}"
+    
+    # If it's 10 digits, assume it's Indian number without country code
+    if len(mobile) == 10:
+        return f"+91{mobile}"
+    
+    # If it already starts with +, return as is
+    if mobile.startswith('+'):
+        return mobile
+        
+    raise ValueError("Invalid mobile number format")
+
+def validate_indian_mobile(mobile: str) -> bool:
+    """Validate Indian mobile number"""
+    try:
+        formatted = format_mobile_number(mobile)
+        # Indian mobile numbers: +91 followed by 10 digits starting with 6,7,8,9
+        pattern = r'^\+91[6-9]\d{9}$'
+        return bool(re.match(pattern, formatted))
+    except ValueError:
+        return False
+
+async def send_otp_sms(mobile: str) -> bool:
+    """Send OTP via Twilio SMS"""
+    if not twilio_client or not TWILIO_VERIFY_SERVICE:
+        logger.warning("Twilio not configured, OTP sending disabled")
+        return False
+    
+    try:
+        formatted_mobile = format_mobile_number(mobile)
+        verification = twilio_client.verify.services(TWILIO_VERIFY_SERVICE).verifications.create(
+            to=formatted_mobile,
+            channel='sms'
+        )
+        logger.info(f"OTP sent to {formatted_mobile}, status: {verification.status}")
+        return verification.status == 'pending'
+    except Exception as e:
+        logger.error(f"Failed to send OTP to {mobile}: {str(e)}")
+        return False
+
+async def verify_otp_sms(mobile: str, otp: str) -> bool:
+    """Verify OTP via Twilio"""
+    if not twilio_client or not TWILIO_VERIFY_SERVICE:
+        logger.warning("Twilio not configured, OTP verification disabled")
+        return False
+    
+    try:
+        formatted_mobile = format_mobile_number(mobile)
+        check = twilio_client.verify.services(TWILIO_VERIFY_SERVICE).verification_checks.create(
+            to=formatted_mobile,
+            code=otp
+        )
+        logger.info(f"OTP verification for {formatted_mobile}: {check.status}")
+        return check.status == 'approved'
+    except Exception as e:
+        logger.error(f"Failed to verify OTP for {mobile}: {str(e)}")
+        return False
+
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()
     if expires_delta:
