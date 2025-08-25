@@ -275,26 +275,179 @@ async def require_admin(current_user: User = Depends(get_current_user)):
 # ===== AUTHENTICATION ROUTES =====
 @api_router.post("/register", response_model=UserResponse)
 async def register_user(user: UserCreate):
-    # Check if user already exists
-    existing_user = await db.users.find_one({"email": user.email})
+    # Validate that either email+password OR mobile is provided
+    if user.email and user.password:
+        # Email registration
+        existing_user = await db.users.find_one({"email": user.email})
+        if existing_user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email already registered"
+            )
+        
+        # Hash password and create user
+        hashed_password = get_password_hash(user.password)
+        user_data = user.dict()
+        user_data["password"] = hashed_password
+        user_data["role"] = UserRole.STUDENT  # Force student role
+        
+        new_user = User(**user_data)
+        await db.users.insert_one(new_user.dict())
+        
+        return UserResponse(**new_user.dict())
+    
+    elif user.mobile:
+        # Mobile registration - requires OTP verification first
+        if not validate_indian_mobile(user.mobile):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid Indian mobile number"
+            )
+        
+        formatted_mobile = format_mobile_number(user.mobile)
+        existing_user = await db.users.find_one({"mobile": formatted_mobile})
+        if existing_user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Mobile number already registered"
+            )
+        
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Mobile registration requires OTP verification. Use /send-otp first."
+        )
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Either email+password or mobile number is required"
+        )
+
+@api_router.post("/send-otp")
+async def send_otp(request: MobileLoginRequest):
+    """Send OTP to mobile number for registration or login"""
+    if not validate_indian_mobile(request.mobile):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid Indian mobile number. Use format: +91XXXXXXXXXX or 10-digit number"
+        )
+    
+    formatted_mobile = format_mobile_number(request.mobile)
+    
+    # Send OTP via Twilio
+    success = await send_otp_sms(formatted_mobile)
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to send OTP. Please try again."
+        )
+    
+    return {"message": "OTP sent successfully", "mobile": formatted_mobile}
+
+@api_router.post("/verify-otp-register", response_model=UserResponse) 
+async def verify_otp_and_register(request: OTPVerifyRequest):
+    """Verify OTP and register new user with mobile number"""
+    if not request.name:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Name is required for registration"
+        )
+    
+    if not validate_indian_mobile(request.mobile):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid mobile number"
+        )
+    
+    formatted_mobile = format_mobile_number(request.mobile)
+    
+    # Check if mobile already registered
+    existing_user = await db.users.find_one({"mobile": formatted_mobile})
     if existing_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email already registered"
+            detail="Mobile number already registered. Use login instead."
         )
     
-    # Force role to student - no admin registrations allowed
-    user_data = user.dict()
-    user_data["role"] = UserRole.STUDENT  # All new registrations are students
+    # Verify OTP
+    otp_valid = await verify_otp_sms(formatted_mobile, request.otp)
+    if not otp_valid:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired OTP"
+        )
     
-    # Hash password and create user
-    hashed_password = get_password_hash(user.password)
-    user_data["password"] = hashed_password
+    # Create new user
+    user_data = {
+        "name": request.name,
+        "mobile": formatted_mobile,
+        "role": UserRole.STUDENT,
+        "mobile_verified": True,
+        "email": None,
+        "password": None
+    }
     
     new_user = User(**user_data)
     await db.users.insert_one(new_user.dict())
     
     return UserResponse(**new_user.dict())
+
+@api_router.post("/verify-otp-login", response_model=Token)
+async def verify_otp_and_login(request: OTPVerifyRequest):
+    """Verify OTP and login existing user"""
+    if not validate_indian_mobile(request.mobile):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid mobile number"
+        )
+    
+    formatted_mobile = format_mobile_number(request.mobile)
+    
+    # Find existing user
+    user = await db.users.find_one({"mobile": formatted_mobile})
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Mobile number not registered. Please register first."
+        )
+    
+    # Verify OTP
+    otp_valid = await verify_otp_sms(formatted_mobile, request.otp)
+    if not otp_valid:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired OTP"
+        )
+    
+    # Update mobile verification status
+    await db.users.update_one(
+        {"mobile": formatted_mobile},
+        {"$set": {"mobile_verified": True}}
+    )
+    
+    # Generate JWT token
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    # Use mobile as subject since email might be None
+    token_subject = user.get("email") or user.get("mobile")
+    access_token = create_access_token(
+        data={"sub": token_subject}, expires_delta=access_token_expires
+    )
+    
+    # Create UserResponse directly from database fields
+    user_response = UserResponse(
+        id=user["id"],
+        email=user.get("email"),
+        mobile=user.get("mobile"),
+        name=user["name"],
+        role=user["role"],
+        is_active=user["is_active"],
+        mobile_verified=user.get("mobile_verified", False)
+    )
+    
+    return Token(
+        access_token=access_token,
+        token_type="bearer",
+        user=user_response
+    )
 
 @api_router.post("/login", response_model=Token)
 async def login_user(user_credentials: UserLogin):
