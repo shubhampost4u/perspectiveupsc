@@ -62,7 +62,17 @@ const AdminDashboard = () => {
   useEffect(() => {
     fetchTests();
     fetchStudents();
+    fetchUploadFormat();
   }, []);
+
+  const fetchUploadFormat = async () => {
+    try {
+      const response = await axios.get(`${API}/admin/bulk-upload-format`, axiosConfig);
+      setUploadFormatInfo(response.data);
+    } catch (error) {
+      console.error('Error fetching upload format:', error);
+    }
+  };
 
   const axiosConfig = {
     headers: { Authorization: `Bearer ${token}` }
