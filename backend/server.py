@@ -64,21 +64,31 @@ class UserRole(str):
     STUDENT = "student"
 
 class UserBase(BaseModel):
-    email: EmailStr
+    email: Optional[EmailStr] = None
+    mobile: Optional[str] = None
     name: str
     role: str = UserRole.STUDENT
 
 class UserCreate(UserBase):
-    password: str
-    # Remove role field - all registrations will be students only
+    password: Optional[str] = None
+    # Either email+password OR mobile (for OTP) is required
 
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
 
+class MobileLoginRequest(BaseModel):
+    mobile: str
+
+class OTPVerifyRequest(BaseModel):
+    mobile: str
+    otp: str
+    name: Optional[str] = None  # For registration
+
 class User(UserBase):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    password: str  # Add password field for database storage
+    password: Optional[str] = None  # Optional for mobile-only users
+    mobile_verified: bool = False
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     is_active: bool = True
 
