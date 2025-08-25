@@ -125,6 +125,12 @@ function App() {
                 <RegisterPage />
               </PublicRoute>
             } />
+            
+            <Route path="/forgot-password" element={
+              <PublicRoute>
+                <ForgotPassword />
+              </PublicRoute>
+            } />
 
             {/* Protected Routes */}
             <Route path="/admin" element={
