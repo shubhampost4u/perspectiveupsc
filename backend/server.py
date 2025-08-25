@@ -189,7 +189,9 @@ async def register_user(user: UserCreate):
     user_data["password"] = hashed_password
     
     new_user = User(**user_data)
-    await db.users.insert_one(new_user.dict())
+    user_dict = new_user.dict()
+    user_dict["password"] = hashed_password  # Ensure password is included in the dict
+    await db.users.insert_one(user_dict)
     
     return UserResponse(**new_user.dict())
 
