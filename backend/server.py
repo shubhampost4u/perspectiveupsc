@@ -75,6 +75,15 @@ class ResetPasswordRequest(BaseModel):
     reset_token: str
     new_password: str
 
+class PaymentOrder(BaseModel):
+    test_id: str
+    amount: float  # Amount in rupees
+
+class PaymentVerification(BaseModel):
+    razorpay_order_id: str
+    razorpay_payment_id: str
+    razorpay_signature: str
+
 class User(UserBase):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     password: str  # Add password field for database storage
