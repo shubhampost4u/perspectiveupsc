@@ -303,6 +303,62 @@ async def get_current_user_info(current_user: User = Depends(get_current_user)):
 
 @api_router.post("/forgot-password")
 async def forgot_password(request: ForgotPasswordRequest):
+    """Send password reset email to user"""
+    # Always return the same message for security (don't reveal if email exists)
+    user = await db.users.find_one({"email": request.email})
+    
+    if user and user["role"] == UserRole.STUDENT:
+        # Generate secure reset token
+        reset_token = secrets.token_urlsafe(32)
+        expiry = datetime.now(timezone.utc) + timedelta(hours=1)
+        
+        # Store reset token in database
+        await db.password_resets.insert_one({
+            "email": request.email,
+            "token": reset_token,
+            "expires_at": expiry,
+            "used": False
+        })
+        
+        # Send password reset email
+        await send_reset_email(request.email, reset_token)
+    
+    return {"message": "If the email exists, a password reset link has been sent"}
+
+@api_router.post("/reset-password")
+async def reset_password(request: ResetPasswordRequest):
+    """Reset user password using reset token"""
+    # Find valid reset token
+    reset_record = await db.password_resets.find_one({
+        "email": request.email,
+        "token": request.reset_token,
+        "used": False,
+        "expires_at": {"$gt": datetime.now(timezone.utc)}
+    })
+    
+    if not reset_record:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired reset token"
+        )
+    
+    # Update user password
+    hashed_password = get_password_hash(request.new_password)
+    await db.users.update_one(
+        {"email": request.email},
+        {"$set": {"password": hashed_password}}
+    )
+    
+    # Mark reset token as used
+    await db.password_resets.update_one(
+        {"_id": reset_record["_id"]},
+        {"$set": {"used": True}}
+    )
+    
+    return {"message": "Password reset successfully"}
+
+@api_router.post("/forgot-password")
+async def forgot_password(request: ForgotPasswordRequest):
     """Send password reset token to user's email"""
     user = await db.users.find_one({"email": request.email})
     if not user:
