@@ -38,6 +38,20 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 security = HTTPBearer()
 
+# Twilio setup
+if TWILIO_AVAILABLE:
+    TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID')
+    TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN') 
+    TWILIO_VERIFY_SERVICE = os.environ.get('TWILIO_VERIFY_SERVICE')
+    
+    if TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN:
+        twilio_client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+    else:
+        twilio_client = None
+        print("⚠️ Twilio credentials not configured")
+else:
+    twilio_client = None
+
 # Create the main app without a prefix
 app = FastAPI(title="Test Platform API")
 
