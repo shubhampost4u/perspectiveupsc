@@ -47,6 +47,7 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: str
+    # Remove role field - all registrations will be students only
 
 class UserLogin(BaseModel):
     email: EmailStr
