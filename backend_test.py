@@ -396,6 +396,7 @@ class TestPlatformAPITester:
         self.test_authentication()
         self.test_admin_functionality()
         self.test_student_functionality()
+        self.test_payment_integration()
         self.test_authorization()
         
         # Print final results
