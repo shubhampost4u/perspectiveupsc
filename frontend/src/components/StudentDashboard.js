@@ -272,12 +272,12 @@ const StudentDashboard = () => {
                         )
                       ) : (
                         <Button
-                          onClick={() => purchaseTest(test.id)}
+                          onClick={() => purchaseTest(test)}
                           disabled={loading}
                           className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
                         >
                           <ShoppingCart className="w-4 h-4 mr-2" />
-                          {loading ? 'Purchasing...' : 'Purchase Test'}
+                          Purchase Test
                         </Button>
                       )}
                     </div>
