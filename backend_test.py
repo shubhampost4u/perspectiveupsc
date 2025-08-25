@@ -81,32 +81,31 @@ class TestPlatformAPITester:
         print("TESTING AUTHENTICATION")
         print("="*50)
         
-        # Test admin registration
-        timestamp = datetime.now().strftime('%H%M%S')
-        admin_data = {
-            "email": f"test_admin_{timestamp}@test.com",
-            "name": "Test Admin",
-            "password": "admin123",
-            "role": "admin"
+        # Test existing admin login
+        admin_login = {
+            "email": "perspectiveupsc1@gmail.com",
+            "password": "perspective@2025"
         }
         
         success, response = self.run_test(
-            "Admin Registration",
+            "Existing Admin Login",
             "POST",
-            "register",
+            "login",
             200,
-            data=admin_data
+            data=admin_login
         )
         
-        if success:
-            self.admin_user = response
+        if success and 'access_token' in response:
+            self.admin_token = response['access_token']
+            self.admin_user = response['user']
+            print(f"   Admin token obtained: {self.admin_token[:20]}...")
         
         # Test student registration
+        timestamp = datetime.now().strftime('%H%M%S')
         student_data = {
             "email": f"test_student_{timestamp}@test.com",
             "name": "Test Student",
-            "password": "student123",
-            "role": "student"
+            "password": "student123"
         }
         
         success, response = self.run_test(
@@ -119,24 +118,6 @@ class TestPlatformAPITester:
         
         if success:
             self.student_user = response
-        
-        # Test admin login
-        admin_login = {
-            "email": admin_data["email"],
-            "password": admin_data["password"]
-        }
-        
-        success, response = self.run_test(
-            "Admin Login",
-            "POST",
-            "login",
-            200,
-            data=admin_login
-        )
-        
-        if success and 'access_token' in response:
-            self.admin_token = response['access_token']
-            print(f"   Admin token obtained: {self.admin_token[:20]}...")
         
         # Test student login
         student_login = {
@@ -155,33 +136,6 @@ class TestPlatformAPITester:
         if success and 'access_token' in response:
             self.student_token = response['access_token']
             print(f"   Student token obtained: {self.student_token[:20]}...")
-        
-        # Test demo accounts
-        demo_admin_login = {
-            "email": "admin@test.com",
-            "password": "admin123"
-        }
-        
-        success, response = self.run_test(
-            "Demo Admin Login",
-            "POST",
-            "login",
-            200,
-            data=demo_admin_login
-        )
-        
-        demo_student_login = {
-            "email": "student@test.com",
-            "password": "student123"
-        }
-        
-        success, response = self.run_test(
-            "Demo Student Login",
-            "POST",
-            "login",
-            200,
-            data=demo_student_login
-        )
         
         return self.admin_token and self.student_token
 
