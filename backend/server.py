@@ -185,9 +185,12 @@ async def register_user(user: UserCreate):
             detail="Email already registered"
         )
     
+    # Force role to student - no admin registrations allowed
+    user_data = user.dict()
+    user_data["role"] = UserRole.STUDENT  # All new registrations are students
+    
     # Hash password and create user
     hashed_password = get_password_hash(user.password)
-    user_data = user.dict()
     user_data["password"] = hashed_password
     
     new_user = User(**user_data)
