@@ -12,11 +12,15 @@ import uuid
 from datetime import datetime, timezone, timedelta
 import jwt
 from passlib.context import CryptContext
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-import secrets
 import re
+
+# Twilio imports
+try:
+    from twilio.rest import Client
+    TWILIO_AVAILABLE = True
+except ImportError:
+    TWILIO_AVAILABLE = False
+    print("⚠️ Twilio not available - OTP features will be disabled")
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -34,15 +38,19 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 security = HTTPBearer()
 
-# Email OTP setup
-SMTP_SERVER = os.environ.get('SMTP_SERVER', 'smtp.gmail.com')
-SMTP_PORT = int(os.environ.get('SMTP_PORT', '587'))
-SMTP_USERNAME = os.environ.get('SMTP_USERNAME')
-SMTP_PASSWORD = os.environ.get('SMTP_PASSWORD')
-FROM_EMAIL = os.environ.get('FROM_EMAIL', SMTP_USERNAME)
-
-# In-memory OTP storage (use Redis in production)
-otp_storage = {}
+# Twilio setup
+if TWILIO_AVAILABLE:
+    TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID')
+    TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN') 
+    TWILIO_VERIFY_SERVICE = os.environ.get('TWILIO_VERIFY_SERVICE')
+    
+    if TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN:
+        twilio_client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+    else:
+        twilio_client = None
+        print("⚠️ Twilio credentials not configured")
+else:
+    twilio_client = None
 
 # Create the main app without a prefix
 app = FastAPI(title="Test Platform API")
@@ -192,56 +200,38 @@ def validate_indian_mobile(mobile: str) -> bool:
     except ValueError:
         return False
 
-async def send_otp_email(mobile: str) -> bool:
-    """Send OTP via email (using mobile as identifier)"""
-    if not SMTP_USERNAME or not SMTP_PASSWORD:
-        logger.warning("SMTP not configured, OTP sending disabled")
+async def send_otp_sms(mobile: str) -> bool:
+    """Send OTP via Twilio SMS"""
+    if not twilio_client or not TWILIO_VERIFY_SERVICE:
+        logger.warning("Twilio not configured, OTP sending disabled")
         return False
     
     try:
-        # Generate 6-digit OTP
-        otp = secrets.randbelow(900000) + 100000
-        
-        # Store OTP with expiration (5 minutes)
-        expiry = datetime.now(timezone.utc) + timedelta(minutes=5)
-        otp_storage[mobile] = {
-            'otp': str(otp),
-            'expiry': expiry
-        }
-        
-        # For demo purposes, we'll just log the OTP
-        # In production, you'd send this via email to the user's registered email
-        logger.info(f"OTP for {mobile}: {otp} (expires at {expiry})")
-        print(f"📧 OTP for {mobile}: {otp}")
-        
-        return True
+        formatted_mobile = format_mobile_number(mobile)
+        verification = twilio_client.verify.services(TWILIO_VERIFY_SERVICE).verifications.create(
+            to=formatted_mobile,
+            channel='sms'
+        )
+        logger.info(f"OTP sent to {formatted_mobile}, status: {verification.status}")
+        return verification.status == 'pending'
     except Exception as e:
-        logger.error(f"Failed to generate OTP for {mobile}: {str(e)}")
+        logger.error(f"Failed to send OTP to {mobile}: {str(e)}")
         return False
 
-async def verify_otp_email(mobile: str, otp: str) -> bool:
-    """Verify OTP"""
+async def verify_otp_sms(mobile: str, otp: str) -> bool:
+    """Verify OTP via Twilio"""
+    if not twilio_client or not TWILIO_VERIFY_SERVICE:
+        logger.warning("Twilio not configured, OTP verification disabled")
+        return False
+    
     try:
-        stored_data = otp_storage.get(mobile)
-        if not stored_data:
-            logger.warning(f"No OTP found for {mobile}")
-            return False
-        
-        # Check if OTP has expired
-        if datetime.now(timezone.utc) > stored_data['expiry']:
-            logger.warning(f"OTP expired for {mobile}")
-            del otp_storage[mobile]
-            return False
-        
-        # Verify OTP
-        if stored_data['otp'] == otp:
-            logger.info(f"OTP verified successfully for {mobile}")
-            del otp_storage[mobile]  # Remove used OTP
-            return True
-        else:
-            logger.warning(f"Invalid OTP for {mobile}")
-            return False
-            
+        formatted_mobile = format_mobile_number(mobile)
+        check = twilio_client.verify.services(TWILIO_VERIFY_SERVICE).verification_checks.create(
+            to=formatted_mobile,
+            code=otp
+        )
+        logger.info(f"OTP verification for {formatted_mobile}: {check.status}")
+        return check.status == 'approved'
     except Exception as e:
         logger.error(f"Failed to verify OTP for {mobile}: {str(e)}")
         return False
@@ -349,8 +339,8 @@ async def send_otp(request: MobileLoginRequest):
     
     formatted_mobile = format_mobile_number(request.mobile)
     
-    # Send OTP via email
-    success = await send_otp_email(formatted_mobile)
+    # Send OTP via Twilio
+    success = await send_otp_sms(formatted_mobile)
     if not success:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -385,7 +375,7 @@ async def verify_otp_and_register(request: OTPVerifyRequest):
         )
     
     # Verify OTP
-    otp_valid = await verify_otp_email(formatted_mobile, request.otp)
+    otp_valid = await verify_otp_sms(formatted_mobile, request.otp)
     if not otp_valid:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -427,7 +417,7 @@ async def verify_otp_and_login(request: OTPVerifyRequest):
         )
     
     # Verify OTP
-    otp_valid = await verify_otp_email(formatted_mobile, request.otp)
+    otp_valid = await verify_otp_sms(formatted_mobile, request.otp)
     if not otp_valid:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
