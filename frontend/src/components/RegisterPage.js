@@ -16,8 +16,8 @@ const RegisterPage = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    password: '',
-    role: 'student'
+    password: ''
+    // Removed role field - all registrations are students
   });
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
