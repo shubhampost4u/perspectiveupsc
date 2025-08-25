@@ -34,15 +34,12 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 security = HTTPBearer()
 
-# Email OTP setup
+# Email setup for password reset
 SMTP_SERVER = os.environ.get('SMTP_SERVER', 'smtp.gmail.com')
 SMTP_PORT = int(os.environ.get('SMTP_PORT', '587'))
 SMTP_USERNAME = os.environ.get('SMTP_USERNAME')
 SMTP_PASSWORD = os.environ.get('SMTP_PASSWORD')
 FROM_EMAIL = os.environ.get('FROM_EMAIL', SMTP_USERNAME)
-
-# In-memory OTP storage (use Redis in production)
-otp_storage = {}
 
 # Create the main app without a prefix
 app = FastAPI(title="Test Platform API")
