@@ -777,6 +777,18 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Razorpay configuration
+RAZORPAY_KEY_ID = os.environ.get('RAZORPAY_KEY_ID')
+RAZORPAY_KEY_SECRET = os.environ.get('RAZORPAY_KEY_SECRET')
+RAZORPAY_WEBHOOK_SECRET = os.environ.get('RAZORPAY_WEBHOOK_SECRET')
+
+# Initialize Razorpay client
+if RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET:
+    razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
+else:
+    razorpay_client = None
+    logger.warning("Razorpay credentials not configured")
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
