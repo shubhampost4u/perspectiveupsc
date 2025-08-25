@@ -190,6 +190,85 @@ const AdminDashboard = () => {
     toast.success('Logged out successfully');
   };
 
+  const handleBulkFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
+      toast.error('Please select an Excel file (.xlsx or .xls)');
+      return;
+    }
+
+    setBulkFile(file);
+    
+    const formData = new FormData();
+    formData.append('file', file);
+
+    setLoading(true);
+    try {
+      const response = await axios.post(`${API}/admin/bulk-upload-questions`, formData, {
+        ...axiosConfig,
+        headers: {
+          ...axiosConfig.headers,
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      setBulkQuestions(response.data.questions);
+      toast.success(`Successfully processed ${response.data.count} questions from Excel file`);
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      if (error.response?.data?.detail?.errors) {
+        const errorMsg = `Validation errors found:\n${error.response.data.detail.errors.slice(0, 3).join('\n')}`;
+        toast.error(errorMsg);
+      } else {
+        toast.error(error.response?.data?.detail || 'Failed to process Excel file');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const createTestFromBulk = async () => {
+    if (bulkQuestions.length === 0) {
+      toast.error('No questions to create test from');
+      return;
+    }
+
+    if (!testForm.title || !testForm.description || !testForm.price || !testForm.duration_minutes) {
+      toast.error('Please fill in test title, description, price, and duration');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await axios.post(`${API}/admin/tests`, {
+        ...testForm,
+        questions: bulkQuestions,
+        price: parseFloat(testForm.price),
+        duration_minutes: parseInt(testForm.duration_minutes)
+      }, axiosConfig);
+
+      toast.success('Test created successfully with bulk questions!');
+      setShowBulkUpload(false);
+      setBulkFile(null);
+      setBulkQuestions([]);
+      setTestForm({
+        title: '',
+        description: '',
+        price: '',
+        duration_minutes: '',
+        questions: []
+      });
+      fetchTests();
+    } catch (error) {
+      console.error('Error creating test:', error);
+      toast.error('Failed to create test');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       {/* Header */}
