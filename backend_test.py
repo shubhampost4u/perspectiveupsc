@@ -393,7 +393,7 @@ class TestPlatformAPITester:
             "Delete Test Without Authentication",
             "DELETE",
             f"admin/tests/{test_to_delete_id}",
-            401  # Should fail without authentication
+            403  # FastAPI returns 403 for missing authentication
         )
         
         # Step 3: Test delete with student token (should fail)
