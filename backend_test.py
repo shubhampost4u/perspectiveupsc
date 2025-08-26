@@ -684,6 +684,11 @@ def main():
     tester = TestPlatformAPITester()
     return tester.run_all_tests()
 
+def test_delete_functionality_only():
+    """Function to run only delete test functionality tests"""
+    tester = TestPlatformAPITester()
+    return tester.run_delete_tests_only()
+
 def test_password_reset_only():
     """Function to run only password reset tests"""
     tester = TestPlatformAPITester()
@@ -693,5 +698,7 @@ if __name__ == "__main__":
     import sys
     if len(sys.argv) > 1 and sys.argv[1] == "password-reset":
         sys.exit(test_password_reset_only())
+    elif len(sys.argv) > 1 and sys.argv[1] == "delete-tests":
+        sys.exit(test_delete_functionality_only())
     else:
         sys.exit(main())
