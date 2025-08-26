@@ -185,6 +185,28 @@ const AdminDashboard = () => {
     }
   };
 
+  const deleteTest = async (testId, testTitle) => {
+    if (!window.confirm(`Are you sure you want to delete the test "${testTitle}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await axios.delete(`${API}/admin/tests/${testId}`, axiosConfig);
+      toast.success('Test deleted successfully!');
+      fetchTests(); // Refresh the tests list
+    } catch (error) {
+      console.error('Error deleting test:', error);
+      if (error.response?.data?.detail) {
+        toast.error(error.response.data.detail);
+      } else {
+        toast.error('Failed to delete test');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleLogout = () => {
     logout();
     toast.success('Logged out successfully');
