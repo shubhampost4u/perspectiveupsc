@@ -342,8 +342,16 @@ async def forgot_password(request: ForgotPasswordRequest):
             "used": False
         })
         
-        # Send password reset email
-        await send_reset_email(request.email, reset_token)
+        # Try to send password reset email
+        email_sent = await send_reset_email(request.email, reset_token)
+        
+        # If email fails, return the token for demo purposes
+        if not email_sent:
+            return {
+                "message": "If the email exists, a password reset link has been sent",
+                "demo_token": reset_token,
+                "demo_note": "Email delivery failed. Use this token for testing purposes."
+            }
     
     return {"message": "If the email exists, a password reset link has been sent"}
 
