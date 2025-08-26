@@ -345,6 +345,153 @@ class TestPlatformAPITester:
         
         return True
 
+    def test_delete_test_functionality(self):
+        """Test delete test functionality for admin dashboard"""
+        print("\n" + "="*50)
+        print("TESTING DELETE TEST FUNCTIONALITY")
+        print("="*50)
+        
+        if not self.admin_token:
+            print("❌ No admin token available, skipping delete tests")
+            return False
+        
+        # Step 1: Create a test specifically for deletion testing
+        test_data = {
+            "title": "Test for Deletion",
+            "description": "This test will be deleted as part of testing",
+            "price": 50.0,
+            "duration_minutes": 15,
+            "questions": [
+                {
+                    "question_text": "What is the capital of India?",
+                    "options": ["Mumbai", "New Delhi", "Kolkata", "Chennai"],
+                    "correct_answer": 1,
+                    "explanation": "New Delhi is the capital of India"
+                }
+            ]
+        }
+        
+        success, response = self.run_test(
+            "Create Test for Deletion",
+            "POST",
+            "admin/tests",
+            200,
+            data=test_data,
+            token=self.admin_token
+        )
+        
+        test_to_delete_id = None
+        if success and 'id' in response:
+            test_to_delete_id = response['id']
+            print(f"   Test created for deletion with ID: {test_to_delete_id}")
+        else:
+            print("❌ Failed to create test for deletion, skipping delete tests")
+            return False
+        
+        # Step 2: Test unauthorized delete (without admin token)
+        success, response = self.run_test(
+            "Delete Test Without Authentication",
+            "DELETE",
+            f"admin/tests/{test_to_delete_id}",
+            401  # Should fail without authentication
+        )
+        
+        # Step 3: Test delete with student token (should fail)
+        if self.student_token:
+            success, response = self.run_test(
+                "Delete Test With Student Token",
+                "DELETE",
+                f"admin/tests/{test_to_delete_id}",
+                403,  # Should fail - students can't delete tests
+                token=self.student_token
+            )
+        
+        # Step 4: Test delete non-existent test
+        fake_test_id = "non-existent-test-id-12345"
+        success, response = self.run_test(
+            "Delete Non-existent Test",
+            "DELETE",
+            f"admin/tests/{fake_test_id}",
+            404,  # Should fail - test not found
+            token=self.admin_token
+        )
+        
+        # Step 5: Test successful deletion of test without purchases
+        success, response = self.run_test(
+            "Delete Test Successfully",
+            "DELETE",
+            f"admin/tests/{test_to_delete_id}",
+            200,  # Should succeed
+            token=self.admin_token
+        )
+        
+        if success:
+            expected_message = "Test deleted successfully"
+            if response.get('message') == expected_message:
+                print("   ✅ Test deleted successfully with correct message")
+            else:
+                print(f"   ⚠️  Unexpected message: {response.get('message')}")
+        
+        # Step 6: Verify test is actually deleted
+        success, response = self.run_test(
+            "Verify Test is Deleted",
+            "DELETE",
+            f"admin/tests/{test_to_delete_id}",
+            404,  # Should fail - test no longer exists
+            token=self.admin_token
+        )
+        
+        if success:
+            print("   ✅ Test confirmed deleted - subsequent delete attempts fail with 404")
+        
+        # Step 7: Test business logic - create test with simulated purchase
+        # Note: We can't easily simulate a purchase in this test without complex setup
+        # But we can test the endpoint structure and authentication
+        
+        # Create another test to verify admin can still create tests after deletion
+        verification_test_data = {
+            "title": "Verification Test After Deletion",
+            "description": "This test verifies admin can still create tests",
+            "price": 25.0,
+            "duration_minutes": 10,
+            "questions": [
+                {
+                    "question_text": "What is 1 + 1?",
+                    "options": ["1", "2", "3", "4"],
+                    "correct_answer": 1,
+                    "explanation": "1 + 1 equals 2"
+                }
+            ]
+        }
+        
+        success, response = self.run_test(
+            "Create Test After Deletion (Verification)",
+            "POST",
+            "admin/tests",
+            200,
+            data=verification_test_data,
+            token=self.admin_token
+        )
+        
+        # Step 8: Get all admin tests to verify the deleted test is not in the list
+        success, response = self.run_test(
+            "Get Admin Tests After Deletion",
+            "GET",
+            "admin/tests",
+            200,
+            token=self.admin_token
+        )
+        
+        if success:
+            test_ids = [test['id'] for test in response]
+            if test_to_delete_id not in test_ids:
+                print("   ✅ Deleted test confirmed not in admin tests list")
+            else:
+                print("   ❌ Deleted test still appears in admin tests list")
+        
+        print("\n📋 Delete test functionality testing completed")
+        return True
+
     def test_password_reset_functionality(self):
         """Test password reset email functionality"""
         print("\n" + "="*50)
