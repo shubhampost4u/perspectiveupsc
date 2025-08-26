@@ -506,7 +506,7 @@ class TestPlatformAPITester:
                 else:
                     print("   ⚠️  Could not create purchase order for protection test")
         
-        # Step 8: Create another test to verify the deleted test is not in the list
+        # Step 8: Create another test to verify admin can still create tests after deletion
         verification_test_data = {
             "title": "Verification Test After Deletion",
             "description": "This test verifies admin can still create tests",
