@@ -150,3 +150,5 @@
 ## agent_communication:
     - agent: "main"
       message: "Identified root cause: SMTP credentials are empty in backend/.env file. Need to either configure email service or provide alternative solution for demo mode."
+    - agent: "main"  
+      message: "SMTP credentials configured with admin@perspectiveupsc.com. Backend restarted. Ready to test password reset email functionality."
