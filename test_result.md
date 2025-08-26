@@ -104,7 +104,22 @@
 
 ## user_problem_statement: "The Reset password feature is not working. I am unable to get the reset token email" - RESOLVED
 
+NEW ISSUE: "Delete test feature in admin login is not working"
+
 ## backend:
+  - task: "Delete Test Functionality"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: false
+          agent: "user"
+          comment: "User reports delete test feature in admin dashboard is not working"
+
+  - task: "Password Reset Email Functionality"
   - task: "Password Reset Email Functionality"
     implemented: true
     working: true
