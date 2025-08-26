@@ -163,6 +163,48 @@ class TestResult(BaseModel):
     time_taken_minutes: int
     completed_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
+class CartItem(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    test_id: str
+    test_title: str
+    test_price: float
+    added_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class Cart(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    student_id: str
+    items: List[CartItem] = []
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class CartResponse(BaseModel):
+    id: str
+    items: List[CartItem]
+    subtotal: float
+    discount: float
+    total: float
+    savings: float
+    bundle_info: str
+
+class BundleOrder(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    student_id: str
+    test_ids: List[str]
+    individual_total: float
+    discount_amount: float
+    final_total: float
+    status: str = "pending"  # pending, completed, failed
+    razorpay_order_id: Optional[str] = None
+    razorpay_payment_id: Optional[str] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    completed_at: Optional[datetime] = None
+
+class AddToCartRequest(BaseModel):
+    test_id: str
+
+class CartCheckoutRequest(BaseModel):
+    pass  # No additional data needed for cart checkout
+
 # ===== UTILITY FUNCTIONS =====
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
