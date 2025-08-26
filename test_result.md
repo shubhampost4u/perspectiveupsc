@@ -142,6 +142,21 @@ NEW ISSUE: "Delete test feature in admin login is not working" - FIXING IN PROGR
           comment: "All password reset tests PASSED. API endpoints working correctly. SMTP configured. Gmail security blocks direct auth but system properly falls back to console logging. Complete password reset flow tested and verified."
 
 ## frontend:
+  - task: "Delete Test UI"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/components/AdminDashboard.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: false
+          agent: "main"
+          comment: "Delete button was present but had no onClick handler"
+        - working: true
+          agent: "main"
+          comment: "Added deleteTest function with confirmation dialog and onClick handler to delete button"
+
   - task: "Forgot Password UI"
     implemented: true
     working: true
