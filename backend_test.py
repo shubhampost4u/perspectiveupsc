@@ -445,10 +445,68 @@ class TestPlatformAPITester:
             print("   ✅ Test confirmed deleted - subsequent delete attempts fail with 404")
         
         # Step 7: Test business logic - create test with simulated purchase
-        # Note: We can't easily simulate a purchase in this test without complex setup
-        # But we can test the endpoint structure and authentication
+        # Create a test and simulate a purchase to test deletion prevention
+        protected_test_data = {
+            "title": "Protected Test with Purchase",
+            "description": "This test will have a simulated purchase",
+            "price": 100.0,
+            "duration_minutes": 60,
+            "questions": [
+                {
+                    "question_text": "What is the largest planet in our solar system?",
+                    "options": ["Earth", "Jupiter", "Saturn", "Mars"],
+                    "correct_answer": 1,
+                    "explanation": "Jupiter is the largest planet in our solar system"
+                }
+            ]
+        }
         
-        # Create another test to verify admin can still create tests after deletion
+        success, response = self.run_test(
+            "Create Test for Purchase Protection Test",
+            "POST",
+            "admin/tests",
+            200,
+            data=protected_test_data,
+            token=self.admin_token
+        )
+        
+        protected_test_id = None
+        if success and 'id' in response:
+            protected_test_id = response['id']
+            print(f"   Protected test created with ID: {protected_test_id}")
+            
+            # Try to create a purchase order for this test (this will create a purchase record)
+            if self.student_token:
+                success_purchase, purchase_response = self.run_test(
+                    "Create Purchase Order for Protection Test",
+                    "POST",
+                    f"tests/{protected_test_id}/purchase",
+                    200,
+                    token=self.student_token
+                )
+                
+                if success_purchase:
+                    print("   ✅ Purchase order created - test should now be protected from deletion")
+                    
+                    # Now try to delete the test - should fail due to purchase
+                    success_delete, delete_response = self.run_test(
+                        "Try to Delete Test with Purchase (Should Fail)",
+                        "DELETE",
+                        f"admin/tests/{protected_test_id}",
+                        400,  # Should fail with 400 - cannot delete purchased test
+                        token=self.admin_token
+                    )
+                    
+                    if success_delete:
+                        expected_message = "Cannot delete test that has been purchased by students"
+                        if delete_response.get('detail') == expected_message:
+                            print("   ✅ Purchase protection working - test cannot be deleted")
+                        else:
+                            print(f"   ⚠️  Unexpected error message: {delete_response.get('detail')}")
+                else:
+                    print("   ⚠️  Could not create purchase order for protection test")
+        
+        # Step 8: Create another test to verify the deleted test is not in the list
         verification_test_data = {
             "title": "Verification Test After Deletion",
             "description": "This test verifies admin can still create tests",
