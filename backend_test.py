@@ -467,6 +467,7 @@ class TestPlatformAPITester:
         self.test_student_functionality()
         self.test_payment_integration()
         self.test_authorization()
+        self.test_password_reset_functionality()
         
         # Print final results
         print("\n" + "="*50)
@@ -476,6 +477,31 @@ class TestPlatformAPITester:
         
         if self.tests_passed == self.tests_run:
             print("🎉 All tests passed!")
+            return 0
+        else:
+            print(f"❌ {self.tests_run - self.tests_passed} tests failed")
+            return 1
+
+    def run_password_reset_tests_only(self):
+        """Run only password reset tests"""
+        print("🔐 Starting Password Reset Testing")
+        print(f"Base URL: {self.base_url}")
+        
+        # First get authentication tokens
+        print("\n📋 Setting up authentication for password reset tests...")
+        self.test_authentication()
+        
+        # Run password reset tests
+        self.test_password_reset_functionality()
+        
+        # Print final results
+        print("\n" + "="*50)
+        print("PASSWORD RESET TEST RESULTS")
+        print("="*50)
+        print(f"📊 Tests passed: {self.tests_passed}/{self.tests_run}")
+        
+        if self.tests_passed == self.tests_run:
+            print("🎉 All password reset tests passed!")
             return 0
         else:
             print(f"❌ {self.tests_run - self.tests_passed} tests failed")
