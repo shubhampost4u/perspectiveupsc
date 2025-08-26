@@ -104,7 +104,12 @@
 
 ## user_problem_statement: "The Reset password feature is not working. I am unable to get the reset token email" - RESOLVED
 
-NEW ISSUE: "Delete test feature in admin login is not working" - FIXING IN PROGRESS
+ISSUE: "Delete test feature in admin login is not working" - RESOLVED ✅
+
+NEW REQUIREMENTS: 
+1. Test deactivation/visibility control for students
+2. Sales cart functionality for bundling tests
+3. Update email settings with new SMTP configuration
 
 ## backend:
   - task: "Delete Test Functionality"
