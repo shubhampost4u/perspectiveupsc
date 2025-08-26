@@ -992,7 +992,7 @@ class TestPlatformAPITester:
             "Unauthenticated Cart Access (Should Fail)",
             "GET",
             "cart",
-            401
+            403  # FastAPI returns 403 for missing authentication
         )
         
         # Test 15: Create a purchase to test "already purchased" prevention
