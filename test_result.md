@@ -107,15 +107,18 @@
 ## backend:
   - task: "Password Reset Email Functionality"
     implemented: true
-    working: false
+    working: true
     file: "/app/backend/server.py"
-    stuck_count: 1
+    stuck_count: 0
     priority: "high"
     needs_retesting: true
     status_history:
         - working: false
           agent: "user"
           comment: "User reports not receiving reset token emails. SMTP credentials are empty in .env file, causing emails to fail."
+        - working: true
+          agent: "main"
+          comment: "Configured SMTP credentials (admin@perspectiveupsc.com) in backend/.env file. Backend restarted successfully. Ready for testing."
 
 ## frontend:
   - task: "Forgot Password UI"
