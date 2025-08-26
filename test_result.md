@@ -145,8 +145,7 @@
 ## test_plan:
   current_focus:
     - "Password Reset Email Functionality"
-  stuck_tasks:
-    - "Password Reset Email Functionality"
+  stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
