@@ -132,14 +132,24 @@ const StudentDashboard = () => {
                 <p className="text-sm text-gray-600">Welcome back, {user?.name}</p>
               </div>
             </div>
-            <Button
-              onClick={handleLogout}
-              variant="outline"
-              className="text-gray-600 hover:text-gray-900"
-            >
-              <LogOut className="w-4 h-4 mr-2" />
-              Logout
-            </Button>
+            <div className="flex items-center space-x-4">
+              <Button
+                onClick={() => navigate('/cart')}
+                variant="outline"
+                className="text-indigo-600 hover:text-indigo-700"
+              >
+                <ShoppingCart className="w-4 h-4 mr-2" />
+                Cart
+              </Button>
+              <Button
+                onClick={handleLogout}
+                variant="outline"
+                className="text-gray-600 hover:text-gray-900"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Logout
+              </Button>
+            </div>
           </div>
         </div>
       </header>
