@@ -108,8 +108,21 @@ ISSUE: "Delete test feature in admin login is not working" - RESOLVED ✅
 
 NEW REQUIREMENTS: 
 1. Test deactivation/visibility control for students
-2. Sales cart functionality for bundling tests
+2. Sales cart functionality for bundling tests - IMPLEMENTING
 3. Update email settings with new SMTP configuration
+
+## backend:
+  - task: "Cart Functionality with Bundle Discounts"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "Implemented complete cart system: CartItem, Cart, BundleOrder models. Added bundle discount logic (10% for 2+ tests, 15% for 3+ tests, 25% for 5+ tests). Created cart endpoints: GET /cart, POST /cart/add, DELETE /cart/remove/{test_id}, DELETE /cart/clear, POST /cart/checkout, POST /cart/verify-payment."
 
 ## backend:
   - task: "Delete Test Functionality"
