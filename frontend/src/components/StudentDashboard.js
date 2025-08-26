@@ -295,14 +295,23 @@ const StudentDashboard = () => {
                           </Button>
                         )
                       ) : (
-                        <Button
-                          onClick={() => purchaseTest(test)}
-                          disabled={loading}
-                          className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
-                        >
-                          <ShoppingCart className="w-4 h-4 mr-2" />
-                          Purchase Test
-                        </Button>
+                        <div className="space-y-2">
+                          <Button
+                            onClick={() => addToCart(test)}
+                            variant="outline"
+                            className="w-full text-indigo-600 border-indigo-600 hover:bg-indigo-50"
+                          >
+                            <ShoppingCart className="w-4 h-4 mr-2" />
+                            Add to Cart
+                          </Button>
+                          <Button
+                            onClick={() => purchaseTest(test)}
+                            disabled={loading}
+                            className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
+                          >
+                            Buy Now (₹{test.price})
+                          </Button>
+                        </div>
                       )}
                     </div>
                   </CardContent>
