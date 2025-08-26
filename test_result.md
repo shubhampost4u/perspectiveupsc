@@ -123,6 +123,12 @@ NEW REQUIREMENTS:
         - working: true
           agent: "main"
           comment: "Implemented complete cart system: CartItem, Cart, BundleOrder models. Added bundle discount logic (10% for 2+ tests, 15% for 3+ tests, 25% for 5+ tests). Created cart endpoints: GET /cart, POST /cart/add, DELETE /cart/remove/{test_id}, DELETE /cart/clear, POST /cart/checkout, POST /cart/verify-payment."
+        - working: false
+          agent: "user"
+          comment: "User reports cart fails to load when trying to open cart page before checkout. Tests can be added but cart page won't load."
+        - working: true
+          agent: "main"
+          comment: "FIXED: Cart loading issue was due to KeyError in GET /cart endpoint. MongoDB returns '_id' field but cart object didn't have 'id' field. Fixed by using cart.get('id', cart.get('_id', 'unknown')). Cart now loads correctly and displays items with proper bundle discount calculations."
         - working: true
           agent: "testing"
           comment: "COMPREHENSIVE CART FUNCTIONALITY TESTING COMPLETED SUCCESSFULLY: All 33 test scenarios PASSED ✅. Complete cart system with bundle discounts is fully functional and production-ready. ✅ Cart Management: Empty cart initialization, add/remove items, clear cart working perfectly. ✅ Bundle Discount Logic: Verified all discount tiers - no discount (1 item), 10% (2+ items), 15% (3+ items), 25% (5+ items) with accurate calculations. ✅ Security & Authorization: Student-only access enforced, admin and unauthenticated access properly blocked (403). ✅ Business Logic: Duplicate item prevention, non-existent test handling, pending vs completed purchase logic working correctly. ✅ Cart Operations: Item removal with discount recalculation, cart clearing, checkout flow all working. ✅ Razorpay Integration: Cart checkout successfully creates Razorpay orders with correct amounts and bundle information. ✅ Error Handling: Proper validation for empty cart checkout, non-existent items, unauthorized access. ✅ Data Integrity: Cart state management, pricing calculations, and bundle information display working accurately. Fixed minor backend issues: cart creation ID handling and Razorpay order creation parameters. The cart functionality with bundle discounts is production-ready and handles all edge cases properly."
