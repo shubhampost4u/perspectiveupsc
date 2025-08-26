@@ -630,6 +630,31 @@ class TestPlatformAPITester:
             print(f"❌ {self.tests_run - self.tests_passed} tests failed")
             return 1
 
+    def run_delete_tests_only(self):
+        """Run only delete test functionality tests"""
+        print("🗑️ Starting Delete Test Functionality Testing")
+        print(f"Base URL: {self.base_url}")
+        
+        # First get authentication tokens
+        print("\n📋 Setting up authentication for delete tests...")
+        self.test_authentication()
+        
+        # Run delete tests
+        self.test_delete_test_functionality()
+        
+        # Print final results
+        print("\n" + "="*50)
+        print("DELETE TEST FUNCTIONALITY RESULTS")
+        print("="*50)
+        print(f"📊 Tests passed: {self.tests_passed}/{self.tests_run}")
+        
+        if self.tests_passed == self.tests_run:
+            print("🎉 All delete test functionality tests passed!")
+            return 0
+        else:
+            print(f"❌ {self.tests_run - self.tests_passed} tests failed")
+            return 1
+
     def run_password_reset_tests_only(self):
         """Run only password reset tests"""
         print("🔐 Starting Password Reset Testing")
