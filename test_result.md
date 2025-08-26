@@ -101,3 +101,49 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+## user_problem_statement: "The Reset password feature is not working. I am unable to get the reset token email"
+
+## backend:
+  - task: "Password Reset Email Functionality"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: false
+          agent: "user"
+          comment: "User reports not receiving reset token emails. SMTP credentials are empty in .env file, causing emails to fail."
+
+## frontend:
+  - task: "Forgot Password UI"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/components/ForgotPassword.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "Frontend implementation is correct and properly calls backend API"
+
+## metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 1
+  run_ui: false
+
+## test_plan:
+  current_focus:
+    - "Password Reset Email Functionality"
+  stuck_tasks:
+    - "Password Reset Email Functionality"
+  test_all: false
+  test_priority: "high_first"
+
+## agent_communication:
+    - agent: "main"
+      message: "Identified root cause: SMTP credentials are empty in backend/.env file. Need to either configure email service or provide alternative solution for demo mode."
