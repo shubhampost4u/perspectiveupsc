@@ -345,6 +345,116 @@ class TestPlatformAPITester:
         
         return True
 
+    def test_password_reset_functionality(self):
+        """Test password reset email functionality"""
+        print("\n" + "="*50)
+        print("TESTING PASSWORD RESET FUNCTIONALITY")
+        print("="*50)
+        
+        # Test 1: Valid Student Email Reset Request
+        if self.student_user:
+            student_email = self.student_user.get('email')
+            if student_email:
+                success, response = self.run_test(
+                    "Valid Student Email Reset Request",
+                    "POST",
+                    "forgot-password",
+                    200,
+                    data={"email": student_email}
+                )
+                
+                if success:
+                    expected_message = "If the email exists, a password reset link has been sent"
+                    if response.get('message') == expected_message:
+                        print("   ✅ Correct security message returned")
+                    else:
+                        print(f"   ⚠️  Unexpected message: {response.get('message')}")
+        
+        # Test 2: Invalid Email Reset Request (non-existent email)
+        success, response = self.run_test(
+            "Invalid Email Reset Request",
+            "POST",
+            "forgot-password",
+            200,  # Should still return 200 for security
+            data={"email": "nonexistent@test.com"}
+        )
+        
+        if success:
+            expected_message = "If the email exists, a password reset link has been sent"
+            if response.get('message') == expected_message:
+                print("   ✅ Security feature working - same message for non-existent email")
+            else:
+                print(f"   ⚠️  Unexpected message: {response.get('message')}")
+        
+        # Test 3: Admin Email Reset Request (should return success but not send email)
+        success, response = self.run_test(
+            "Admin Email Reset Request",
+            "POST",
+            "forgot-password",
+            200,
+            data={"email": "perspectiveupsc1@gmail.com"}  # Admin email
+        )
+        
+        if success:
+            expected_message = "If the email exists, a password reset link has been sent"
+            if response.get('message') == expected_message:
+                print("   ✅ Admin email handled correctly (returns success but doesn't send)")
+            else:
+                print(f"   ⚠️  Unexpected message: {response.get('message')}")
+        
+        # Test 4: Invalid email format
+        success, response = self.run_test(
+            "Invalid Email Format",
+            "POST",
+            "forgot-password",
+            422,  # Should fail validation
+            data={"email": "invalid-email-format"}
+        )
+        
+        # Test 5: Missing email field
+        success, response = self.run_test(
+            "Missing Email Field",
+            "POST",
+            "forgot-password",
+            422,  # Should fail validation
+            data={}
+        )
+        
+        # Test 6: Reset Token Validation with Invalid Token
+        success, response = self.run_test(
+            "Reset Password with Invalid Token",
+            "POST",
+            "reset-password",
+            400,  # Should fail with invalid token
+            data={
+                "email": "test@example.com",
+                "reset_token": "invalid_token_12345",
+                "new_password": "newpassword123"
+            }
+        )
+        
+        if success:
+            expected_message = "Invalid or expired reset token"
+            if response.get('detail') == expected_message:
+                print("   ✅ Invalid token properly rejected")
+            else:
+                print(f"   ⚠️  Unexpected error message: {response.get('detail')}")
+        
+        # Test 7: Reset Password with Missing Fields
+        success, response = self.run_test(
+            "Reset Password with Missing Fields",
+            "POST",
+            "reset-password",
+            422,  # Should fail validation
+            data={
+                "email": "test@example.com"
+                # Missing reset_token and new_password
+            }
+        )
+        
+        print("\n📧 Check backend logs for email sending confirmation...")
+        return True
+
     def run_all_tests(self):
         """Run all tests"""
         print("🚀 Starting Test Platform API Testing")
