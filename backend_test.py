@@ -1049,6 +1049,7 @@ class TestPlatformAPITester:
         self.test_authorization()
         self.test_delete_test_functionality()
         self.test_password_reset_functionality()
+        self.test_cart_functionality()
         
         # Print final results
         print("\n" + "="*50)
