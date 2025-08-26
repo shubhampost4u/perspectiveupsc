@@ -8,6 +8,7 @@ import AdminDashboard from "./components/AdminDashboard";
 import StudentDashboard from "./components/StudentDashboard";
 import TestTaking from "./components/TestTaking";
 import TestSolutions from "./components/TestSolutions";
+import Cart from "./components/Cart";
 import { Toaster } from "./components/ui/sonner";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
