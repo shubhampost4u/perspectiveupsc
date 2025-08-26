@@ -212,6 +212,48 @@ def verify_password(plain_password, hashed_password):
 def get_password_hash(password):
     return pwd_context.hash(password)
 
+def calculate_bundle_discount(items: List[CartItem]) -> Dict[str, Any]:
+    """Calculate bundle discount based on number of items"""
+    if not items:
+        return {
+            "subtotal": 0.0,
+            "discount_percentage": 0,
+            "discount_amount": 0.0,
+            "total": 0.0,
+            "savings": 0.0,
+            "bundle_info": "Empty cart"
+        }
+    
+    subtotal = sum(item.test_price for item in items)
+    item_count = len(items)
+    
+    # Bundle discount logic
+    if item_count >= 5:
+        discount_percentage = 25  # 25% off for 5+ tests
+        bundle_info = "Mega Bundle: 25% OFF on 5+ tests!"
+    elif item_count >= 3:
+        discount_percentage = 15  # 15% off for 3-4 tests
+        bundle_info = "Super Bundle: 15% OFF on 3+ tests!"
+    elif item_count >= 2:
+        discount_percentage = 10  # 10% off for 2 tests
+        bundle_info = "Bundle Deal: 10% OFF on 2+ tests!"
+    else:
+        discount_percentage = 0
+        bundle_info = "Add more tests for bundle discounts!"
+    
+    discount_amount = (subtotal * discount_percentage) / 100
+    total = subtotal - discount_amount
+    savings = discount_amount
+    
+    return {
+        "subtotal": round(subtotal, 2),
+        "discount_percentage": discount_percentage,
+        "discount_amount": round(discount_amount, 2),
+        "total": round(total, 2),
+        "savings": round(savings, 2),
+        "bundle_info": bundle_info
+    }
+
 async def send_reset_email(email: str, reset_token: str) -> bool:
     """Send password reset email"""
     if not SMTP_USERNAME or not SMTP_PASSWORD:
