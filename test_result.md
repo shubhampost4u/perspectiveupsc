@@ -231,7 +231,7 @@ NEW REQUIREMENTS:
 
 ## test_plan:
   current_focus:
-    - "Cart Functionality with Bundle Discounts - TESTING COMPLETED SUCCESSFULLY ✅"
+    - "Cart Frontend UI - TESTING COMPLETED SUCCESSFULLY ✅"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
