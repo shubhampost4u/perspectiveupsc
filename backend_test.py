@@ -1114,6 +1114,31 @@ class TestPlatformAPITester:
             print(f"❌ {self.tests_run - self.tests_passed} tests failed")
             return 1
 
+    def run_cart_tests_only(self):
+        """Run only cart functionality tests"""
+        print("🛒 Starting Cart Functionality Testing")
+        print(f"Base URL: {self.base_url}")
+        
+        # First get authentication tokens
+        print("\n📋 Setting up authentication for cart tests...")
+        self.test_authentication()
+        
+        # Run cart tests
+        self.test_cart_functionality()
+        
+        # Print final results
+        print("\n" + "="*50)
+        print("CART FUNCTIONALITY TEST RESULTS")
+        print("="*50)
+        print(f"📊 Tests passed: {self.tests_passed}/{self.tests_run}")
+        
+        if self.tests_passed == self.tests_run:
+            print("🎉 All cart functionality tests passed!")
+            return 0
+        else:
+            print(f"❌ {self.tests_run - self.tests_passed} tests failed")
+            return 1
+
 def main():
     tester = TestPlatformAPITester()
     return tester.run_all_tests()
