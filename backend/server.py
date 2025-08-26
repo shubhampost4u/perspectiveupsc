@@ -993,7 +993,7 @@ async def get_cart(current_user: User = Depends(get_current_user)):
     )
     
     return CartResponse(
-        id=cart.get("id", cart.get("_id", "unknown")),
+        id=cart.get("id", str(cart.get("_id", "unknown"))),
         items=cart.get("items", []),
         subtotal=bundle_calc["subtotal"],
         discount=bundle_calc["discount_amount"],
