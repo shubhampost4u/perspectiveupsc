@@ -177,15 +177,15 @@ async def send_reset_email(email: str, reset_token: str) -> bool:
         # For demo purposes, just log the reset token
         logger.info(f"Password reset token for {email}: {reset_token}")
         print(f"🔐 Password reset token for {email}: {reset_token}")
-        return True
+        return False
     
     try:
         # Create email message
-        subject = "Password Reset - Perspective UPSC"
+        subject = "Password Reset - PerspectiveUPSC"
         body = f"""
         Hello,
         
-        You have requested a password reset for your Perspective UPSC account.
+        You have requested a password reset for your PerspectiveUPSC account.
         
         Your password reset token is: {reset_token}
         
@@ -194,7 +194,7 @@ async def send_reset_email(email: str, reset_token: str) -> bool:
         If you didn't request this reset, please ignore this email.
         
         Best regards,
-        Perspective UPSC Team
+        PerspectiveUPSC Team
         """
         
         msg = MIMEMultipart()
@@ -224,7 +224,7 @@ async def send_reset_email(email: str, reset_token: str) -> bool:
         # For demo, still log the token even if email fails
         logger.info(f"Password reset token for {email}: {reset_token}")
         print(f"🔐 Password reset token for {email}: {reset_token}")
-        return True  # Return True for demo purposes
+        return False
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()
