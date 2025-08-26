@@ -973,6 +973,292 @@ async def get_test_solutions(test_id: str, current_user: User = Depends(get_curr
         "solutions": solutions
     }
 
+# ===== CART ROUTES =====
+@api_router.get("/cart", response_model=CartResponse)
+async def get_cart(current_user: User = Depends(get_current_user)):
+    """Get student's current cart"""
+    if current_user.role != UserRole.STUDENT:
+        raise HTTPException(status_code=403, detail="Only students can access cart")
+    
+    # Get or create cart
+    cart = await db.carts.find_one({"student_id": current_user.id})
+    if not cart:
+        cart = Cart(student_id=current_user.id)
+        await db.carts.insert_one(cart.dict())
+        cart = cart.dict()
+    
+    # Calculate pricing
+    bundle_calc = calculate_bundle_discount(
+        [CartItem(**item) for item in cart.get("items", [])]
+    )
+    
+    return CartResponse(
+        id=cart["id"],
+        items=cart.get("items", []),
+        subtotal=bundle_calc["subtotal"],
+        discount=bundle_calc["discount_amount"],
+        total=bundle_calc["total"],
+        savings=bundle_calc["savings"],
+        bundle_info=bundle_calc["bundle_info"]
+    )
+
+@api_router.post("/cart/add")
+async def add_to_cart(request: AddToCartRequest, current_user: User = Depends(get_current_user)):
+    """Add a test to cart"""
+    if current_user.role != UserRole.STUDENT:
+        raise HTTPException(status_code=403, detail="Only students can add to cart")
+    
+    # Check if test exists
+    test = await db.tests.find_one({"id": request.test_id, "is_active": True})
+    if not test:
+        raise HTTPException(status_code=404, detail="Test not found")
+    
+    # Check if already purchased
+    existing_purchase = await db.purchases.find_one({
+        "student_id": current_user.id,
+        "test_id": request.test_id,
+        "status": "completed"
+    })
+    if existing_purchase:
+        raise HTTPException(status_code=400, detail="Test already purchased")
+    
+    # Get or create cart
+    cart = await db.carts.find_one({"student_id": current_user.id})
+    if not cart:
+        cart = Cart(student_id=current_user.id)
+        cart_dict = cart.dict()
+    else:
+        cart_dict = cart
+    
+    # Check if test already in cart
+    existing_items = cart_dict.get("items", [])
+    for item in existing_items:
+        if item["test_id"] == request.test_id:
+            raise HTTPException(status_code=400, detail="Test already in cart")
+    
+    # Add item to cart
+    new_item = CartItem(
+        test_id=request.test_id,
+        test_title=test["title"],
+        test_price=test["price"]
+    )
+    
+    existing_items.append(new_item.dict())
+    
+    # Update cart
+    await db.carts.update_one(
+        {"student_id": current_user.id},
+        {
+            "$set": {
+                "items": existing_items,
+                "updated_at": datetime.now(timezone.utc)
+            }
+        },
+        upsert=True
+    )
+    
+    return {"message": "Test added to cart successfully"}
+
+@api_router.delete("/cart/remove/{test_id}")
+async def remove_from_cart(test_id: str, current_user: User = Depends(get_current_user)):
+    """Remove a test from cart"""
+    if current_user.role != UserRole.STUDENT:
+        raise HTTPException(status_code=403, detail="Only students can modify cart")
+    
+    cart = await db.carts.find_one({"student_id": current_user.id})
+    if not cart:
+        raise HTTPException(status_code=404, detail="Cart not found")
+    
+    # Remove item from cart
+    existing_items = cart.get("items", [])
+    updated_items = [item for item in existing_items if item["test_id"] != test_id]
+    
+    if len(updated_items) == len(existing_items):
+        raise HTTPException(status_code=404, detail="Test not found in cart")
+    
+    # Update cart
+    await db.carts.update_one(
+        {"student_id": current_user.id},
+        {
+            "$set": {
+                "items": updated_items,
+                "updated_at": datetime.now(timezone.utc)
+            }
+        }
+    )
+    
+    return {"message": "Test removed from cart successfully"}
+
+@api_router.delete("/cart/clear")
+async def clear_cart(current_user: User = Depends(get_current_user)):
+    """Clear all items from cart"""
+    if current_user.role != UserRole.STUDENT:
+        raise HTTPException(status_code=403, detail="Only students can modify cart")
+    
+    await db.carts.update_one(
+        {"student_id": current_user.id},
+        {
+            "$set": {
+                "items": [],
+                "updated_at": datetime.now(timezone.utc)
+            }
+        }
+    )
+    
+    return {"message": "Cart cleared successfully"}
+
+@api_router.post("/cart/checkout")
+async def checkout_cart(current_user: User = Depends(get_current_user)):
+    """Create Razorpay order for cart checkout"""
+    if current_user.role != UserRole.STUDENT:
+        raise HTTPException(status_code=403, detail="Only students can checkout")
+    
+    if not razorpay_client:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Payment gateway not configured"
+        )
+    
+    # Get cart
+    cart = await db.carts.find_one({"student_id": current_user.id})
+    if not cart or not cart.get("items"):
+        raise HTTPException(status_code=400, detail="Cart is empty")
+    
+    # Calculate pricing
+    bundle_calc = calculate_bundle_discount(
+        [CartItem(**item) for item in cart["items"]]
+    )
+    
+    # Create bundle order record
+    bundle_order = BundleOrder(
+        student_id=current_user.id,
+        test_ids=[item["test_id"] for item in cart["items"]],
+        individual_total=bundle_calc["subtotal"],
+        discount_amount=bundle_calc["discount_amount"],
+        final_total=bundle_calc["total"]
+    )
+    
+    # Create Razorpay order
+    try:
+        razorpay_order = razorpay_client.order.create(
+            amount=int(bundle_calc["total"] * 100),  # Amount in paise
+            currency='INR',
+            receipt=bundle_order.id
+        )
+        
+        bundle_order.razorpay_order_id = razorpay_order['id']
+        
+        # Save bundle order
+        await db.bundle_orders.insert_one(bundle_order.dict())
+        
+        return {
+            "order_id": razorpay_order['id'],
+            "amount": bundle_calc["total"],
+            "currency": "INR",
+            "bundle_info": bundle_calc["bundle_info"],
+            "savings": bundle_calc["savings"],
+            "test_count": len(cart["items"])
+        }
+        
+    except Exception as e:
+        logger.error(f"Error creating Razorpay order: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to create payment order"
+        )
+
+@api_router.post("/cart/verify-payment")
+async def verify_cart_payment(verification: PaymentVerification, current_user: User = Depends(get_current_user)):
+    """Verify cart payment and complete bundle purchase"""
+    if current_user.role != UserRole.STUDENT:
+        raise HTTPException(status_code=403, detail="Only students can verify payments")
+    
+    if not razorpay_client:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Payment gateway not configured"
+        )
+    
+    try:
+        # Verify payment signature
+        params_dict = {
+            'razorpay_order_id': verification.razorpay_order_id,
+            'razorpay_payment_id': verification.razorpay_payment_id,
+            'razorpay_signature': verification.razorpay_signature
+        }
+        
+        razorpay_client.utility.verify_payment_signature(params_dict)
+        
+        # Update bundle order status
+        bundle_order = await db.bundle_orders.find_one_and_update(
+            {
+                "student_id": current_user.id,
+                "razorpay_order_id": verification.razorpay_order_id,
+                "status": "pending"
+            },
+            {
+                "$set": {
+                    "status": "completed",
+                    "razorpay_payment_id": verification.razorpay_payment_id,
+                    "completed_at": datetime.now(timezone.utc)
+                }
+            }
+        )
+        
+        if not bundle_order:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Bundle order not found"
+            )
+        
+        # Create individual purchase records for each test
+        purchases = []
+        for test_id in bundle_order["test_ids"]:
+            purchase = Purchase(
+                student_id=current_user.id,
+                test_id=test_id,
+                amount=bundle_order["final_total"] / len(bundle_order["test_ids"]),  # Split amount evenly
+                status="completed",
+                razorpay_order_id=verification.razorpay_order_id,
+                razorpay_payment_id=verification.razorpay_payment_id,
+                completed_at=datetime.now(timezone.utc)
+            )
+            purchases.append(purchase.dict())
+        
+        # Insert all purchases
+        await db.purchases.insert_many(purchases)
+        
+        # Clear the cart
+        await db.carts.update_one(
+            {"student_id": current_user.id},
+            {
+                "$set": {
+                    "items": [],
+                    "updated_at": datetime.now(timezone.utc)
+                }
+            }
+        )
+        
+        return {
+            "message": "Bundle payment verified successfully",
+            "status": "success",
+            "tests_purchased": len(bundle_order["test_ids"]),
+            "total_savings": bundle_order["discount_amount"]
+        }
+        
+    except razorpay.errors.SignatureVerificationError:
+        logger.error("Bundle payment signature verification failed")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Payment verification failed"
+        )
+    except Exception as e:
+        logger.error(f"Error verifying bundle payment: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Payment verification failed"
+        )
+
 @api_router.get("/debug-users")
 async def debug_users():
     """Debug endpoint to check users in database"""
