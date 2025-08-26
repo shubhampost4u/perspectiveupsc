@@ -183,7 +183,7 @@ NEW ISSUE: "Delete test feature in admin login is not working" - FIXING IN PROGR
 
 ## test_plan:
   current_focus:
-    - "Password Reset Email Functionality - COMPLETED"
+    - "Delete Test Functionality - COMPLETED"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
