@@ -411,6 +411,35 @@ async def get_admin_tests(admin: User = Depends(require_admin)):
     tests = await db.tests.find({"created_by": admin.id}).to_list(1000)
     return [TestResponse(**test, questions_count=len(test["questions"])) for test in tests]
 
+@api_router.delete("/admin/tests/{test_id}")
+async def delete_test(test_id: str, admin: User = Depends(require_admin)):
+    """Delete a test created by the admin"""
+    # Check if test exists and belongs to the admin
+    test = await db.tests.find_one({"id": test_id, "created_by": admin.id})
+    if not test:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Test not found or you don't have permission to delete it"
+        )
+    
+    # Check if any students have purchased this test
+    purchases = await db.purchases.find_one({"test_id": test_id})
+    if purchases:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot delete test that has been purchased by students"
+        )
+    
+    # Delete the test
+    result = await db.tests.delete_one({"id": test_id, "created_by": admin.id})
+    if result.deleted_count == 0:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Test not found"
+        )
+    
+    return {"message": "Test deleted successfully"}
+
 @api_router.get("/admin/students", response_model=List[UserResponse])
 async def get_students(admin: User = Depends(require_admin)):
     students = await db.users.find({"role": UserRole.STUDENT}).to_list(1000)
