@@ -226,7 +226,7 @@ const Cart = () => {
                   <p className="text-gray-600 mb-6">
                     Browse tests and add them to your cart to get started.
                   </p>
-                  <Button onClick={() => navigate('/student/dashboard')}>
+                  <Button onClick={() => navigate('/dashboard')}>
                     Browse Tests
                   </Button>
                 </CardContent>
