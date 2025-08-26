@@ -660,6 +660,381 @@ class TestPlatformAPITester:
         print("\n📧 Check backend logs for email sending confirmation...")
         return True
 
+    def test_cart_functionality(self):
+        """Test cart functionality with bundle discounts"""
+        print("\n" + "="*50)
+        print("TESTING CART FUNCTIONALITY WITH BUNDLE DISCOUNTS")
+        print("="*50)
+        
+        if not self.student_token:
+            print("❌ No student token available, skipping cart tests")
+            return False
+        
+        # Ensure we have multiple tests available for cart testing
+        if not self.admin_token:
+            print("❌ No admin token available, cannot create tests for cart testing")
+            return False
+        
+        # Create multiple tests for cart testing
+        test_ids = []
+        test_prices = [99.0, 149.0, 199.0, 249.0, 299.0]  # Different prices for testing
+        
+        for i, price in enumerate(test_prices):
+            test_data = {
+                "title": f"Cart Test {i+1}",
+                "description": f"Test {i+1} for cart functionality testing",
+                "price": price,
+                "duration_minutes": 30,
+                "questions": [
+                    {
+                        "question_text": f"What is {i+1} + {i+1}?",
+                        "options": [str(i), str((i+1)*2), str(i+2), str(i+3)],
+                        "correct_answer": 1,
+                        "explanation": f"{i+1} + {i+1} equals {(i+1)*2}"
+                    }
+                ]
+            }
+            
+            success, response = self.run_test(
+                f"Create Cart Test {i+1}",
+                "POST",
+                "admin/tests",
+                200,
+                data=test_data,
+                token=self.admin_token
+            )
+            
+            if success and 'id' in response:
+                test_ids.append(response['id'])
+                print(f"   Cart test {i+1} created with ID: {response['id']}")
+        
+        if len(test_ids) < 5:
+            print("❌ Could not create enough tests for comprehensive cart testing")
+            return False
+        
+        # Test 1: Get empty cart initially
+        success, response = self.run_test(
+            "Get Empty Cart",
+            "GET",
+            "cart",
+            200,
+            token=self.student_token
+        )
+        
+        if success:
+            if response.get('items') == [] and response.get('total') == 0:
+                print("   ✅ Empty cart returned correctly")
+            else:
+                print(f"   ⚠️  Cart not empty as expected: {response}")
+        
+        # Test 2: Add first test to cart (no discount)
+        success, response = self.run_test(
+            "Add First Test to Cart",
+            "POST",
+            "cart/add",
+            200,
+            data={"test_id": test_ids[0]},
+            token=self.student_token
+        )
+        
+        # Verify cart with 1 item (no discount)
+        success, response = self.run_test(
+            "Get Cart with 1 Item (No Discount)",
+            "GET",
+            "cart",
+            200,
+            token=self.student_token
+        )
+        
+        if success:
+            expected_subtotal = test_prices[0]
+            if (len(response.get('items', [])) == 1 and 
+                response.get('subtotal') == expected_subtotal and
+                response.get('discount') == 0 and
+                response.get('total') == expected_subtotal):
+                print("   ✅ Single item cart correct - no discount applied")
+            else:
+                print(f"   ❌ Single item cart incorrect: {response}")
+        
+        # Test 3: Add second test to cart (10% discount)
+        success, response = self.run_test(
+            "Add Second Test to Cart",
+            "POST",
+            "cart/add",
+            200,
+            data={"test_id": test_ids[1]},
+            token=self.student_token
+        )
+        
+        # Verify cart with 2 items (10% discount)
+        success, response = self.run_test(
+            "Get Cart with 2 Items (10% Discount)",
+            "GET",
+            "cart",
+            200,
+            token=self.student_token
+        )
+        
+        if success:
+            expected_subtotal = test_prices[0] + test_prices[1]
+            expected_discount = expected_subtotal * 0.10
+            expected_total = expected_subtotal - expected_discount
+            
+            if (len(response.get('items', [])) == 2 and 
+                abs(response.get('subtotal', 0) - expected_subtotal) < 0.01 and
+                abs(response.get('discount', 0) - expected_discount) < 0.01 and
+                abs(response.get('total', 0) - expected_total) < 0.01 and
+                "10%" in response.get('bundle_info', '')):
+                print("   ✅ Two item cart correct - 10% discount applied")
+                print(f"   Subtotal: ₹{response.get('subtotal')}, Discount: ₹{response.get('discount')}, Total: ₹{response.get('total')}")
+            else:
+                print(f"   ❌ Two item cart incorrect: {response}")
+        
+        # Test 4: Add third test to cart (15% discount)
+        success, response = self.run_test(
+            "Add Third Test to Cart",
+            "POST",
+            "cart/add",
+            200,
+            data={"test_id": test_ids[2]},
+            token=self.student_token
+        )
+        
+        # Verify cart with 3 items (15% discount)
+        success, response = self.run_test(
+            "Get Cart with 3 Items (15% Discount)",
+            "GET",
+            "cart",
+            200,
+            token=self.student_token
+        )
+        
+        if success:
+            expected_subtotal = sum(test_prices[:3])
+            expected_discount = expected_subtotal * 0.15
+            expected_total = expected_subtotal - expected_discount
+            
+            if (len(response.get('items', [])) == 3 and 
+                abs(response.get('subtotal', 0) - expected_subtotal) < 0.01 and
+                abs(response.get('discount', 0) - expected_discount) < 0.01 and
+                abs(response.get('total', 0) - expected_total) < 0.01 and
+                "15%" in response.get('bundle_info', '')):
+                print("   ✅ Three item cart correct - 15% discount applied")
+                print(f"   Subtotal: ₹{response.get('subtotal')}, Discount: ₹{response.get('discount')}, Total: ₹{response.get('total')}")
+            else:
+                print(f"   ❌ Three item cart incorrect: {response}")
+        
+        # Test 5: Add fourth and fifth tests to cart (25% discount for 5+ items)
+        for i in [3, 4]:
+            success, response = self.run_test(
+                f"Add Test {i+1} to Cart",
+                "POST",
+                "cart/add",
+                200,
+                data={"test_id": test_ids[i]},
+                token=self.student_token
+            )
+        
+        # Verify cart with 5 items (25% discount)
+        success, response = self.run_test(
+            "Get Cart with 5 Items (25% Discount)",
+            "GET",
+            "cart",
+            200,
+            token=self.student_token
+        )
+        
+        if success:
+            expected_subtotal = sum(test_prices)
+            expected_discount = expected_subtotal * 0.25
+            expected_total = expected_subtotal - expected_discount
+            
+            if (len(response.get('items', [])) == 5 and 
+                abs(response.get('subtotal', 0) - expected_subtotal) < 0.01 and
+                abs(response.get('discount', 0) - expected_discount) < 0.01 and
+                abs(response.get('total', 0) - expected_total) < 0.01 and
+                "25%" in response.get('bundle_info', '')):
+                print("   ✅ Five item cart correct - 25% discount applied")
+                print(f"   Subtotal: ₹{response.get('subtotal')}, Discount: ₹{response.get('discount')}, Total: ₹{response.get('total')}")
+                print(f"   Savings: ₹{response.get('savings')}")
+            else:
+                print(f"   ❌ Five item cart incorrect: {response}")
+        
+        # Test 6: Try to add duplicate test (should fail)
+        success, response = self.run_test(
+            "Add Duplicate Test to Cart (Should Fail)",
+            "POST",
+            "cart/add",
+            400,
+            data={"test_id": test_ids[0]},
+            token=self.student_token
+        )
+        
+        if success and response.get('detail') == "Test already in cart":
+            print("   ✅ Duplicate test prevention working")
+        
+        # Test 7: Try to add non-existent test (should fail)
+        success, response = self.run_test(
+            "Add Non-existent Test to Cart (Should Fail)",
+            "POST",
+            "cart/add",
+            404,
+            data={"test_id": "non-existent-test-id"},
+            token=self.student_token
+        )
+        
+        # Test 8: Remove specific item from cart
+        success, response = self.run_test(
+            "Remove Specific Test from Cart",
+            "DELETE",
+            f"cart/remove/{test_ids[2]}",
+            200,
+            token=self.student_token
+        )
+        
+        # Verify cart after removal (should have 4 items with 15% discount)
+        success, response = self.run_test(
+            "Get Cart After Removal (4 Items, 15% Discount)",
+            "GET",
+            "cart",
+            200,
+            token=self.student_token
+        )
+        
+        if success:
+            if len(response.get('items', [])) == 4 and "15%" in response.get('bundle_info', ''):
+                print("   ✅ Item removal working correctly - discount recalculated")
+            else:
+                print(f"   ❌ Item removal failed: {response}")
+        
+        # Test 9: Try to remove non-existent item (should fail)
+        success, response = self.run_test(
+            "Remove Non-existent Test from Cart (Should Fail)",
+            "DELETE",
+            f"cart/remove/non-existent-test-id",
+            404,
+            token=self.student_token
+        )
+        
+        # Test 10: Test cart checkout (create Razorpay order)
+        success, response = self.run_test(
+            "Cart Checkout (Create Razorpay Order)",
+            "POST",
+            "cart/checkout",
+            200,
+            token=self.student_token
+        )
+        
+        if success:
+            if ('order_id' in response and 
+                'amount' in response and 
+                'bundle_info' in response and
+                'savings' in response):
+                print("   ✅ Cart checkout successful - Razorpay order created")
+                print(f"   Order ID: {response.get('order_id')}")
+                print(f"   Amount: ₹{response.get('amount')}")
+                print(f"   Bundle Info: {response.get('bundle_info')}")
+                print(f"   Savings: ₹{response.get('savings')}")
+            else:
+                print(f"   ❌ Cart checkout response incomplete: {response}")
+        
+        # Test 11: Clear entire cart
+        success, response = self.run_test(
+            "Clear Entire Cart",
+            "DELETE",
+            "cart/clear",
+            200,
+            token=self.student_token
+        )
+        
+        # Verify cart is empty after clearing
+        success, response = self.run_test(
+            "Verify Cart is Empty After Clear",
+            "GET",
+            "cart",
+            200,
+            token=self.student_token
+        )
+        
+        if success:
+            if response.get('items') == [] and response.get('total') == 0:
+                print("   ✅ Cart cleared successfully")
+            else:
+                print(f"   ❌ Cart not cleared properly: {response}")
+        
+        # Test 12: Try to checkout empty cart (should fail)
+        success, response = self.run_test(
+            "Checkout Empty Cart (Should Fail)",
+            "POST",
+            "cart/checkout",
+            400,
+            token=self.student_token
+        )
+        
+        if success and response.get('detail') == "Cart is empty":
+            print("   ✅ Empty cart checkout prevention working")
+        
+        # Test 13: Test authorization - admin cannot access cart
+        if self.admin_token:
+            success, response = self.run_test(
+                "Admin Access Cart (Should Fail)",
+                "GET",
+                "cart",
+                403,
+                token=self.admin_token
+            )
+            
+            if success and response.get('detail') == "Only students can access cart":
+                print("   ✅ Admin cart access properly blocked")
+        
+        # Test 14: Test unauthenticated cart access (should fail)
+        success, response = self.run_test(
+            "Unauthenticated Cart Access (Should Fail)",
+            "GET",
+            "cart",
+            401
+        )
+        
+        # Test 15: Create a purchase to test "already purchased" prevention
+        # Add one test back to cart and simulate purchase
+        success, response = self.run_test(
+            "Add Test for Purchase Prevention Test",
+            "POST",
+            "cart/add",
+            200,
+            data={"test_id": test_ids[0]},
+            token=self.student_token
+        )
+        
+        # Create purchase order for this test
+        success, response = self.run_test(
+            "Create Purchase Order for Prevention Test",
+            "POST",
+            f"tests/{test_ids[0]}/purchase",
+            200,
+            token=self.student_token
+        )
+        
+        if success:
+            # Clear cart first
+            self.run_test("Clear Cart", "DELETE", "cart/clear", 200, token=self.student_token)
+            
+            # Now try to add the purchased test to cart (should fail)
+            success, response = self.run_test(
+                "Add Already Purchased Test to Cart (Should Fail)",
+                "POST",
+                "cart/add",
+                400,
+                data={"test_id": test_ids[0]},
+                token=self.student_token
+            )
+            
+            if success and response.get('detail') == "Test already purchased":
+                print("   ✅ Already purchased test prevention working")
+        
+        print("\n🛒 Cart functionality testing completed")
+        return True
+
     def run_all_tests(self):
         """Run all tests"""
         print("🚀 Starting Test Platform API Testing")
