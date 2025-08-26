@@ -531,7 +531,7 @@ class TestPlatformAPITester:
             token=self.admin_token
         )
         
-        # Step 8: Get all admin tests to verify the deleted test is not in the list
+        # Step 9: Get all admin tests to verify the deleted test is not in the list
         success, response = self.run_test(
             "Get Admin Tests After Deletion",
             "GET",
