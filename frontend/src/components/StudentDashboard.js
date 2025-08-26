@@ -93,6 +93,20 @@ const StudentDashboard = () => {
     toast.success('Logged out successfully');
   };
 
+  const addToCart = async (test) => {
+    try {
+      await axios.post(`${API}/cart/add`, { test_id: test.id }, axiosConfig);
+      toast.success(`${test.title} added to cart!`);
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      if (error.response?.data?.detail) {
+        toast.error(error.response.data.detail);
+      } else {
+        toast.error('Failed to add test to cart');
+      }
+    }
+  };
+
   const isTestPurchased = (testId) => {
     return purchasedTests.some(test => test.id === testId);
   };
