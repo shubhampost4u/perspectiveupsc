@@ -33,12 +33,23 @@ const ForgotPassword = () => {
     setLoading(true);
 
     try {
-      await axios.post(`${API}/forgot-password`, {
+      const response = await axios.post(`${API}/forgot-password`, {
         email: formData.email
       });
       
-      toast.success('Password reset email sent! Check your email for the reset token.');
-      setStep(2);
+      // Check if we got a demo token (when email fails)
+      if (response.data.demo_token) {
+        toast.success('Email delivery failed, but here is your reset token!');
+        // Pre-fill the reset token
+        setFormData(prev => ({
+          ...prev,
+          resetToken: response.data.demo_token
+        }));
+        setStep(2);
+      } else {
+        toast.success('Password reset email sent! Check your email for the reset token.');
+        setStep(2);
+      }
     } catch (error) {
       console.error('Forgot password error:', error);
       toast.error(error.response?.data?.detail || 'Failed to send reset email');
