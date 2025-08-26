@@ -983,9 +983,9 @@ async def get_cart(current_user: User = Depends(get_current_user)):
     # Get or create cart
     cart = await db.carts.find_one({"student_id": current_user.id})
     if not cart:
-        cart = Cart(student_id=current_user.id)
-        await db.carts.insert_one(cart.dict())
-        cart = cart.dict()
+        new_cart = Cart(student_id=current_user.id)
+        await db.carts.insert_one(new_cart.dict())
+        cart = new_cart.dict()
     
     # Calculate pricing
     bundle_calc = calculate_bundle_discount(
