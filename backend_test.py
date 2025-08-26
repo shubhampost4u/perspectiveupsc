@@ -511,5 +511,14 @@ def main():
     tester = TestPlatformAPITester()
     return tester.run_all_tests()
 
+def test_password_reset_only():
+    """Function to run only password reset tests"""
+    tester = TestPlatformAPITester()
+    return tester.run_password_reset_tests_only()
+
 if __name__ == "__main__":
-    sys.exit(main())
+    import sys
+    if len(sys.argv) > 1 and sys.argv[1] == "password-reset":
+        sys.exit(test_password_reset_only())
+    else:
+        sys.exit(main())
