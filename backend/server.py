@@ -1140,11 +1140,11 @@ async def checkout_cart(current_user: User = Depends(get_current_user)):
     
     # Create Razorpay order
     try:
-        razorpay_order = razorpay_client.order.create(
-            amount=int(bundle_calc["total"] * 100),  # Amount in paise
-            currency='INR',
-            receipt=bundle_order.id
-        )
+        razorpay_order = razorpay_client.order.create({
+            "amount": int(bundle_calc["total"] * 100),  # Amount in paise
+            "currency": "INR",
+            "receipt": bundle_order.id
+        })
         
         bundle_order.razorpay_order_id = razorpay_order['id']
         
