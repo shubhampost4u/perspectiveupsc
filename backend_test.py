@@ -1153,11 +1153,18 @@ def test_password_reset_only():
     tester = TestPlatformAPITester()
     return tester.run_password_reset_tests_only()
 
+def test_cart_functionality_only():
+    """Function to run only cart functionality tests"""
+    tester = TestPlatformAPITester()
+    return tester.run_cart_tests_only()
+
 if __name__ == "__main__":
     import sys
     if len(sys.argv) > 1 and sys.argv[1] == "password-reset":
         sys.exit(test_password_reset_only())
     elif len(sys.argv) > 1 and sys.argv[1] == "delete-tests":
         sys.exit(test_delete_functionality_only())
+    elif len(sys.argv) > 1 and sys.argv[1] == "cart-tests":
+        sys.exit(test_cart_functionality_only())
     else:
         sys.exit(main())
