@@ -106,7 +106,7 @@ const Cart = () => {
 
             toast.success(`Bundle purchased successfully! You saved ₹${response.data.savings}!`);
             fetchCart(); // This should now show empty cart
-            navigate('/student/dashboard');
+            navigate('/dashboard');
           } catch (error) {
             console.error('Payment verification error:', error);
             toast.error('Payment verification failed');
