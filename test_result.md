@@ -186,8 +186,9 @@ NEW ISSUE: "Delete test feature in admin login is not working" - FIXING IN PROGR
 
 ## test_plan:
   current_focus:
-    - "Delete Test Functionality - COMPLETED"
-  stuck_tasks: []
+    - "Delete Test UI - BLOCKED BY AUTHENTICATION ISSUE"
+  stuck_tasks:
+    - "Delete Test UI - Admin login authentication failing"
   test_all: false
   test_priority: "high_first"
 
