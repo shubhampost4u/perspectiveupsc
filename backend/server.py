@@ -605,10 +605,10 @@ async def bulk_upload_questions(
                 detail="Excel file is empty"
             )
         
-        if len(df) > 100:
+        if len(df) > 120:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Maximum 100 questions allowed per upload"
+                detail="Maximum 120 questions allowed per upload"
             )
         
         # Process questions
