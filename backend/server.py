@@ -293,8 +293,13 @@ async def send_reset_email(email: str, reset_token: str) -> bool:
             with smtplib.SMTP_SSL(SMTP_SERVER, SMTP_PORT) as server:
                 server.login(SMTP_USERNAME, SMTP_PASSWORD)
                 server.send_message(msg)
+        elif SMTP_PORT == 80 or SMTP_PORT == 25 or SMTP_PORT == 3535:
+            # Use plain SMTP for ports 80, 25, 3535 (GoDaddy specific ports)
+            with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+                server.login(SMTP_USERNAME, SMTP_PASSWORD)
+                server.send_message(msg)
         else:
-            # Use TLS for port 587
+            # Use TLS for port 587 and others
             with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
                 server.starttls()
                 server.login(SMTP_USERNAME, SMTP_PASSWORD)
