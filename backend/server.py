@@ -555,7 +555,7 @@ async def get_bulk_upload_format(admin: User = Depends(require_admin)):
             "option_a, option_b, option_c, option_d: The four answer options", 
             "correct_answer: Must be 'A', 'B', 'C', or 'D' (case insensitive)",
             "explanation: Detailed solution explanation for the question",
-            "Maximum 100 questions per upload",
+            "Maximum 120 questions per upload",
             "All fields are required - no empty cells allowed"
         ],
         "sample_data": {
