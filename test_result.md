@@ -261,7 +261,7 @@ NEW REQUIREMENTS:
 
 ## test_plan:
   current_focus:
-    - "Bulk Upload Questions UI - TESTING COMPLETED SUCCESSFULLY ✅"
+    - "Improved Password Reset Functionality - TESTING COMPLETED SUCCESSFULLY ✅"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
