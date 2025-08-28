@@ -660,29 +660,29 @@ async def forgot_password(request: ForgotPasswordRequest):
     user = await db.users.find_one({"email": request.email})
     
     if user and user["role"] == UserRole.STUDENT:
-        # Generate secure reset token
-        reset_token = secrets.token_urlsafe(32)
-        expiry = datetime.now(timezone.utc) + timedelta(hours=1)
+        # Generate 6-digit OTP instead of long token
+        otp = f"{secrets.randbelow(900000) + 100000:06d}"
+        expiry = datetime.now(timezone.utc) + timedelta(minutes=15)  # Shorter expiry for OTP
         
-        # Store reset token in database
+        # Store reset OTP in database
         await db.password_resets.insert_one({
             "email": request.email,
-            "token": reset_token,
+            "otp": otp,
             "expires_at": expiry,
             "used": False
         })
         
         # Try to send password reset email
-        email_sent = await send_reset_email(request.email, reset_token)
+        email_sent = await send_reset_email(request.email, otp)
         
-        # Always return demo token for testing purposes in development
-        # This ensures users can always reset passwords even if email delivery fails
-        return {
-            "message": "If the email exists, a password reset link has been sent",
-            "demo_token": reset_token,
-            "demo_note": "Use this token if you don't receive the email. Check your spam/junk folder first.",
-            "email_status": "sent" if email_sent else "failed"
-        }
+        # For development/testing, return OTP when email fails
+        if not email_sent:
+            return {
+                "message": "If the email exists, a password reset OTP has been sent to your email",
+                "demo_otp": otp,
+                "demo_note": "Email delivery failed. Use this 6-digit OTP for testing purposes.",
+                "email_status": "failed"
+            }
     
     return {"message": "If the email exists, a password reset link has been sent"}
 
