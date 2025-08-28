@@ -166,6 +166,8 @@ function App() {
               </ProtectedRoute>
             } />
 
+            <Route path="/profile" element={<ProfilePage />} />
+
             {/* Default redirect */}
             <Route path="/" element={
               <Navigate to="/login" replace />
