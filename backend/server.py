@@ -650,7 +650,7 @@ async def logout(response: Response, current_user: User = Depends(get_current_us
         )
 
 @api_router.get("/me", response_model=UserResponse)
-async def get_current_user_info(current_user: User = Depends(get_current_user)):
+async def get_current_user_info(current_user: User = Depends(get_current_user_flexible)):
     return UserResponse(**current_user.dict())
 
 @api_router.post("/forgot-password")
