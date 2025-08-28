@@ -53,6 +53,12 @@ const LoginPage = () => {
     }
   };
 
+  const handleGoogleSignIn = () => {
+    // Redirect to Emergent authentication service
+    const redirectUrl = encodeURIComponent(window.location.origin + '/profile');
+    window.location.href = `https://auth.emergentagent.com/?redirect=${redirectUrl}`;
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">
       {/* Background Pattern */}
