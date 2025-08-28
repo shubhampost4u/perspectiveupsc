@@ -73,7 +73,7 @@ class ForgotPasswordRequest(BaseModel):
 
 class ResetPasswordRequest(BaseModel):
     email: EmailStr
-    reset_token: str
+    otp: str
     new_password: str
 
 class PaymentOrder(BaseModel):
