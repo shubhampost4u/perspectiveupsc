@@ -206,6 +206,21 @@ class AddToCartRequest(BaseModel):
 class CartCheckoutRequest(BaseModel):
     pass  # No additional data needed for cart checkout
 
+class SessionData(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    session_token: str
+    emerent_session_id: str
+    expires_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc) + timedelta(days=7))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class GoogleAuthRequest(BaseModel):
+    session_id: str
+
+class GoogleAuthResponse(BaseModel):
+    access_token: str
+    user: UserResponse
+
 # ===== UTILITY FUNCTIONS =====
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
