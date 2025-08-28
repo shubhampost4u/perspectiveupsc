@@ -924,7 +924,7 @@ async def get_available_tests():
     return [TestResponse(**test, questions_count=len(test["questions"])) for test in tests]
 
 @api_router.post("/tests/{test_id}/purchase")
-async def purchase_test(test_id: str, current_user: User = Depends(get_current_user)):
+async def purchase_test(test_id: str, current_user: User = Depends(get_current_user_flexible)):
     if current_user.role != UserRole.STUDENT:
         raise HTTPException(status_code=403, detail="Only students can purchase tests")
     
