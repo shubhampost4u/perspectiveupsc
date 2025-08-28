@@ -37,9 +37,13 @@ const ForgotPassword = () => {
         email: formData.email
       });
       
-      // Check if we got a demo token (when email fails)
+      // Check if we got a demo token (when email fails or for development)
       if (response.data.demo_token) {
-        toast.success('Email delivery failed, but here is your reset token!');
+        if (response.data.email_status === 'sent') {
+          toast.success('Email sent! If you don\'t receive it, use the token below. Check your spam folder!');
+        } else {
+          toast.success('Email delivery failed, but here is your reset token!');
+        }
         // Pre-fill the reset token
         setFormData(prev => ({
           ...prev,
