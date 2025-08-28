@@ -155,15 +155,16 @@ const ForgotPassword = () => {
             ) : (
               <form onSubmit={handleResetPassword} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="resetToken" className="text-gray-700 font-medium">Reset Token</Label>
+                  <Label htmlFor="otp" className="text-gray-700 font-medium">OTP Code</Label>
                   <Input
-                    id="resetToken"
-                    name="resetToken"
+                    id="otp"
+                    name="otp"
                     type="text"
-                    value={formData.resetToken}
+                    value={formData.otp}
                     onChange={handleChange}
-                    placeholder="Enter the reset token from your email"
+                    placeholder="Enter the 6-digit OTP from your email"
                     required
+                    maxLength="6"
                     className="h-12 bg-white/90 border-gray-200 focus:border-indigo-500 focus:ring-indigo-500/20 transition-all"
                   />
                 </div>
