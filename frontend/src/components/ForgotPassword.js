@@ -155,17 +155,18 @@ const ForgotPassword = () => {
             ) : (
               <form onSubmit={handleResetPassword} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="otp" className="text-gray-700 font-medium">OTP Code</Label>
+                  <Label htmlFor="otp" className="text-gray-700 font-medium">6-Digit OTP</Label>
                   <Input
                     id="otp"
                     name="otp"
                     type="text"
                     value={formData.otp}
                     onChange={handleChange}
-                    placeholder="Enter the 6-digit OTP from your email"
+                    placeholder="Enter 6-digit OTP from email"
                     required
                     maxLength="6"
-                    className="h-12 bg-white/90 border-gray-200 focus:border-indigo-500 focus:ring-indigo-500/20 transition-all"
+                    pattern="[0-9]{6}"
+                    className="h-12 bg-white/90 border-gray-200 focus:border-indigo-500 focus:ring-indigo-500/20 transition-all text-center text-lg tracking-widest"
                   />
                 </div>
 
