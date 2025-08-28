@@ -37,23 +37,9 @@ const ForgotPassword = () => {
         email: formData.email
       });
       
-      // Check if we got a demo token (when email fails or for development)
-      if (response.data.demo_token) {
-        if (response.data.email_status === 'sent') {
-          toast.success('Email sent! If you don\'t receive it, use the token below. Check your spam folder!');
-        } else {
-          toast.success('Email delivery failed, but here is your reset token!');
-        }
-        // Pre-fill the reset token
-        setFormData(prev => ({
-          ...prev,
-          resetToken: response.data.demo_token
-        }));
-        setStep(2);
-      } else {
-        toast.success('Password reset email sent! Check your email for the reset token.');
-        setStep(2);
-      }
+      // Show success message without auto-filling OTP
+      toast.success('Password reset OTP sent! Check your email (including spam folder) for a 6-digit code.');
+      setStep(2);
     } catch (error) {
       console.error('Forgot password error:', error);
       toast.error(error.response?.data?.detail || 'Failed to send reset email');
