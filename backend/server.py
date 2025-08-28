@@ -270,31 +270,36 @@ def calculate_bundle_discount(items: List[CartItem]) -> Dict[str, Any]:
         "bundle_info": bundle_info
     }
 
-async def send_reset_email(email: str, reset_token: str) -> bool:
-    """Send password reset email"""
+async def send_reset_email(email: str, otp: str) -> bool:
+    """Send password reset email with 6-digit OTP"""
     if not SMTP_USERNAME or not SMTP_PASSWORD:
         logger.warning("SMTP not configured, password reset email disabled")
-        # For demo purposes, just log the reset token
-        logger.info(f"Password reset token for {email}: {reset_token}")
-        print(f"🔐 Password reset token for {email}: {reset_token}")
+        # For demo purposes, just log the OTP
+        logger.info(f"Password reset OTP for {email}: {otp}")
+        print(f"🔐 Password reset OTP for {email}: {otp}")
         return False
     
     try:
         # Create email message
-        subject = "Password Reset - PerspectiveUPSC"
+        subject = "Password Reset OTP - PerspectiveUPSC"
         body = f"""
-        Hello,
-        
-        You have requested a password reset for your PerspectiveUPSC account.
-        
-        Your password reset token is: {reset_token}
-        
-        Please use this token to reset your password. This token will expire in 1 hour.
-        
-        If you didn't request this reset, please ignore this email.
-        
-        Best regards,
-        PerspectiveUPSC Team
+Hello,
+
+You have requested a password reset for your PerspectiveUPSC account.
+
+Your 6-digit OTP (One-Time Password) is:
+
+    {otp}
+
+Please enter this OTP on the password reset page to set your new password.
+
+⚠️ Important:
+- This OTP will expire in 15 minutes
+- Do not share this OTP with anyone
+- If you didn't request this reset, please ignore this email
+
+Best regards,
+PerspectiveUPSC Team
         """
         
         msg = MIMEMultipart()
@@ -339,14 +344,14 @@ async def send_reset_email(email: str, reset_token: str) -> bool:
         
         # If all servers failed
         logger.error(f"❌ All SMTP servers failed for {email}. Last error: {last_error}")
-        logger.info(f"Password reset token for {email}: {reset_token}")
-        print(f"🔐 Password reset token for {email}: {reset_token}")
+        logger.info(f"Password reset OTP for {email}: {otp}")
+        print(f"🔐 Password reset OTP for {email}: {otp}")
         return False
         
     except Exception as e:
         logger.error(f"❌ General error sending reset email to {email}: {str(e)}")
-        logger.info(f"Password reset token for {email}: {reset_token}")
-        print(f"🔐 Password reset token for {email}: {reset_token}")
+        logger.info(f"Password reset OTP for {email}: {otp}")
+        print(f"🔐 Password reset OTP for {email}: {otp}")
         return False
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
