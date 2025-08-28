@@ -693,11 +693,11 @@ async def forgot_password(request: ForgotPasswordRequest):
 
 @api_router.post("/reset-password")
 async def reset_password(request: ResetPasswordRequest):
-    """Reset user password using reset token"""
-    # Find valid reset token
+    """Reset user password using OTP"""
+    # Find valid reset OTP
     reset_record = await db.password_resets.find_one({
         "email": request.email,
-        "token": request.reset_token,
+        "otp": request.otp,
         "used": False,
         "expires_at": {"$gt": datetime.now(timezone.utc)}
     })
@@ -705,7 +705,7 @@ async def reset_password(request: ResetPasswordRequest):
     if not reset_record:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid or expired reset token"
+            detail="Invalid or expired OTP"
         )
     
     # Update user password
@@ -715,7 +715,7 @@ async def reset_password(request: ResetPasswordRequest):
         {"$set": {"password": hashed_password}}
     )
     
-    # Mark reset token as used
+    # Mark reset OTP as used
     await db.password_resets.update_one(
         {"_id": reset_record["_id"]},
         {"$set": {"used": True}}
