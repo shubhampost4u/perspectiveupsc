@@ -693,7 +693,7 @@ async def forgot_password(request: ForgotPasswordRequest):
 
 @api_router.post("/reset-password")
 async def reset_password(request: ResetPasswordRequest):
-    """Reset user password using OTP"""
+    """Reset user password using 6-digit OTP"""
     # Find valid reset OTP
     reset_record = await db.password_resets.find_one({
         "email": request.email,
@@ -712,7 +712,7 @@ async def reset_password(request: ResetPasswordRequest):
     hashed_password = get_password_hash(request.new_password)
     await db.users.update_one(
         {"email": request.email},
-        {"$set": {"password": hashed_password}}
+        {"$set": {"password_hash": hashed_password}}
     )
     
     # Mark reset OTP as used
