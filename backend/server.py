@@ -389,6 +389,78 @@ async def require_admin(current_user: User = Depends(get_current_user)):
         )
     return current_user
 
+# ===== GOOGLE/EMERGENT AUTHENTICATION FUNCTIONS =====
+async def get_emergent_user_data(session_id: str) -> Optional[Dict]:
+    """Get user data from Emergent authentication service"""
+    try:
+        async with aiohttp.ClientSession() as session:
+            headers = {"X-Session-ID": session_id}
+            async with session.get(
+                "https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data",
+                headers=headers
+            ) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    return data
+                else:
+                    logger.error(f"Emergent auth API returned status {response.status}")
+                    return None
+    except Exception as e:
+        logger.error(f"Error calling Emergent auth API: {str(e)}")
+        return None
+
+async def get_user_by_session_token(session_token: str) -> Optional[User]:
+    """Get user by session token from database"""
+    try:
+        session_data = await db.sessions.find_one({"session_token": session_token})
+        if not session_data or session_data["expires_at"] < datetime.now(timezone.utc):
+            return None
+        
+        user_data = await db.users.find_one({"id": session_data["user_id"]})
+        if user_data:
+            return User(**user_data)
+        return None
+    except Exception as e:
+        logger.error(f"Error getting user by session token: {str(e)}")
+        return None
+
+# Updated authentication dependency to support both JWT and session tokens
+async def get_current_user_flexible(
+    authorization: Optional[HTTPAuthorizationCredentials] = Depends(security),
+    session_token: Optional[str] = Cookie(None)
+) -> User:
+    """Get current user from JWT token or session token"""
+    
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    
+    # Try session token first (Google auth)
+    if session_token:
+        user = await get_user_by_session_token(session_token)
+        if user:
+            return user
+    
+    # Fallback to JWT token (email/password auth)
+    if authorization:
+        token = authorization.credentials
+        try:
+            payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+            email: str = payload.get("sub")
+            if email is None:
+                raise credentials_exception
+        except jwt.PyJWTError:
+            raise credentials_exception
+        
+        user = await db.users.find_one({"email": email})
+        if user is None:
+            raise credentials_exception
+        return User(**user)
+    
+    raise credentials_exception
+
 # ===== AUTHENTICATION ROUTES =====
 @api_router.post("/register", response_model=UserResponse)
 async def register_user(user: UserCreate):
