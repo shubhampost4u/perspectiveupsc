@@ -51,13 +51,21 @@ const ForgotPassword = () => {
   const handleResetPassword = async (e) => {
     e.preventDefault();
 
-    if (formData.newPassword !== formData.confirmPassword) {
-      toast.error('Passwords do not match');
+    // Validate OTP format (6 digits)
+    if (!/^\d{6}$/.test(formData.otp)) {
+      toast.error('Please enter a valid 6-digit OTP');
       return;
     }
 
+    // Validate password length
     if (formData.newPassword.length < 6) {
       toast.error('Password must be at least 6 characters long');
+      return;
+    }
+
+    // Validate password confirmation
+    if (formData.newPassword !== formData.confirmPassword) {
+      toast.error('Passwords do not match');
       return;
     }
 
@@ -66,15 +74,15 @@ const ForgotPassword = () => {
     try {
       await axios.post(`${API}/reset-password`, {
         email: formData.email,
-        reset_token: formData.resetToken,
+        otp: formData.otp,
         new_password: formData.newPassword
       });
-      
+
       toast.success('Password reset successfully! You can now login with your new password.');
       // Reset form and go back to step 1
       setFormData({
         email: '',
-        resetToken: '',
+        otp: '',
         newPassword: '',
         confirmPassword: ''
       });
