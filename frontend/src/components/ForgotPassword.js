@@ -114,8 +114,8 @@ const ForgotPassword = () => {
             </CardTitle>
             <p className="text-gray-600">
               {step === 1 
-                ? 'Enter your email address to receive a reset token'
-                : 'Enter the reset token and your new password'
+                ? 'Enter your email address to receive a reset OTP'
+                : 'Enter the 6-digit OTP and your new password'
               }
             </p>
           </CardHeader>
