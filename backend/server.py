@@ -684,7 +684,7 @@ async def forgot_password(request: ForgotPasswordRequest):
                 "email_status": "failed"
             }
     
-    return {"message": "If the email exists, a password reset link has been sent"}
+    return {"message": "If the email exists, a password reset OTP has been sent to your email"}
 
 @api_router.post("/reset-password")
 async def reset_password(request: ResetPasswordRequest):
