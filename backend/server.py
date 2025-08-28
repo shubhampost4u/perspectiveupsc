@@ -514,6 +514,141 @@ async def login_user(user_credentials: UserLogin):
         user=user_response
     )
 
+# ===== GOOGLE AUTHENTICATION ROUTES =====
+@api_router.post("/auth/google", response_model=GoogleAuthResponse)
+async def google_auth_callback(
+    request: GoogleAuthRequest, 
+    response: Response
+):
+    """Handle Google authentication callback from Emergent service"""
+    try:
+        # Get user data from Emergent authentication service
+        emergent_data = await get_emergent_user_data(request.session_id)
+        if not emergent_data:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid session ID or authentication failed"
+            )
+        
+        # Extract user data
+        email = emergent_data.get("email")
+        name = emergent_data.get("name")
+        emergent_user_id = emergent_data.get("id")
+        session_token = emergent_data.get("session_token")
+        
+        if not email or not session_token:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Incomplete user data from authentication service"
+            )
+        
+        # Check if user already exists
+        existing_user = await db.users.find_one({"email": email})
+        
+        if existing_user:
+            # User exists, update session
+            user = User(**existing_user)
+        else:
+            # Create new user (auto-assign as student for Google auth)
+            user_id = str(uuid.uuid4())
+            user_data = {
+                "id": user_id,
+                "email": email,
+                "name": name or email.split("@")[0],  # Use email prefix if name not provided
+                "password_hash": "",  # No password for Google auth users
+                "role": UserRole.STUDENT,  # Auto-assign as student
+                "is_active": True,
+                "created_at": datetime.now(timezone.utc),
+                "updated_at": datetime.now(timezone.utc)
+            }
+            
+            await db.users.insert_one(user_data)
+            user = User(**user_data)
+        
+        # Create/update session data
+        session_data = SessionData(
+            user_id=user.id,
+            session_token=session_token,
+            emerent_session_id=request.session_id
+        )
+        
+        # Store session in database
+        await db.sessions.update_one(
+            {"user_id": user.id},
+            {"$set": session_data.dict()},
+            upsert=True
+        )
+        
+        # Set session cookie
+        response.set_cookie(
+            key="session_token",
+            value=session_token,
+            max_age=7 * 24 * 60 * 60,  # 7 days
+            httponly=True,
+            secure=True,
+            samesite="none",
+            path="/"
+        )
+        
+        # Also create JWT token for compatibility
+        access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        access_token = create_access_token(
+            data={"sub": user.email}, expires_delta=access_token_expires
+        )
+        
+        user_response = UserResponse(
+            id=user.id,
+            email=user.email,
+            name=user.name,
+            role=user.role,
+            is_active=user.is_active
+        )
+        
+        return GoogleAuthResponse(access_token=access_token, user=user_response)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in Google auth callback: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Authentication processing failed"
+        )
+
+@api_router.get("/profile")
+async def get_profile(current_user: User = Depends(get_current_user_flexible)):
+    """Get user profile (works with both JWT and session auth)"""
+    return UserResponse(
+        id=current_user.id,
+        email=current_user.email,
+        name=current_user.name,
+        role=current_user.role,
+        is_active=current_user.is_active
+    )
+
+@api_router.post("/logout")
+async def logout(response: Response, current_user: User = Depends(get_current_user_flexible)):
+    """Logout user (clear session token)"""
+    try:
+        # Remove session from database
+        await db.sessions.delete_many({"user_id": current_user.id})
+        
+        # Clear session cookie
+        response.delete_cookie(
+            key="session_token",
+            path="/",
+            secure=True,
+            samesite="none"
+        )
+        
+        return {"message": "Logged out successfully"}
+    except Exception as e:
+        logger.error(f"Error during logout: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Logout failed"
+        )
+
 @api_router.get("/me", response_model=UserResponse)
 async def get_current_user_info(current_user: User = Depends(get_current_user)):
     return UserResponse(**current_user.dict())
