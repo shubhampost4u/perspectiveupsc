@@ -287,30 +287,48 @@ async def send_reset_email(email: str, reset_token: str) -> bool:
         msg['Subject'] = subject
         msg.attach(MIMEText(body, 'plain'))
         
-        # Send email
-        if SMTP_PORT == 465:
-            # Use SSL for port 465
-            with smtplib.SMTP_SSL(SMTP_SERVER, SMTP_PORT) as server:
-                server.login(SMTP_USERNAME, SMTP_PASSWORD)
-                server.send_message(msg)
-        elif SMTP_PORT == 80 or SMTP_PORT == 25 or SMTP_PORT == 3535:
-            # Use plain SMTP for ports 80, 25, 3535 (GoDaddy specific ports)
-            with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
-                server.login(SMTP_USERNAME, SMTP_PASSWORD)
-                server.send_message(msg)
-        else:
-            # Use TLS for port 587 and others
-            with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
-                server.starttls()
-                server.login(SMTP_USERNAME, SMTP_PASSWORD)
-                server.send_message(msg)
+        # Try multiple SMTP configurations for GoDaddy
+        smtp_configs = [
+            ("smtpout.secureserver.net", 587, "TLS"),
+            ("smtp.secureserver.net", 587, "TLS"), 
+            ("smtp.titan.email", 587, "TLS"),
+            ("smtp.secureserver.net", 465, "SSL"),
+            ("smtp.titan.email", 465, "SSL"),
+        ]
         
-        logger.info(f"Password reset email sent to {email}")
-        return True
+        last_error = None
+        for server, port, method in smtp_configs:
+            try:
+                logger.info(f"Attempting SMTP connection to {server}:{port} using {method}")
+                
+                if method == "SSL" and port == 465:
+                    with smtplib.SMTP_SSL(server, port, timeout=30) as smtp_server:
+                        smtp_server.login(SMTP_USERNAME, SMTP_PASSWORD)
+                        smtp_server.send_message(msg)
+                        logger.info(f"✅ Successfully sent email via {server}:{port} SSL")
+                        return True
+                else:
+                    with smtplib.SMTP(server, port, timeout=30) as smtp_server:
+                        if method == "TLS":
+                            smtp_server.starttls()
+                        smtp_server.login(SMTP_USERNAME, SMTP_PASSWORD)
+                        smtp_server.send_message(msg)
+                        logger.info(f"✅ Successfully sent email via {server}:{port} {method}")
+                        return True
+                        
+            except Exception as server_error:
+                last_error = server_error
+                logger.warning(f"❌ Failed {server}:{port} {method}: {str(server_error)}")
+                continue
+        
+        # If all servers failed
+        logger.error(f"❌ All SMTP servers failed for {email}. Last error: {last_error}")
+        logger.info(f"Password reset token for {email}: {reset_token}")
+        print(f"🔐 Password reset token for {email}: {reset_token}")
+        return False
         
     except Exception as e:
-        logger.error(f"Failed to send reset email to {email}: {str(e)}")
-        # For demo, still log the token even if email fails
+        logger.error(f"❌ General error sending reset email to {email}: {str(e)}")
         logger.info(f"Password reset token for {email}: {reset_token}")
         print(f"🔐 Password reset token for {email}: {reset_token}")
         return False
