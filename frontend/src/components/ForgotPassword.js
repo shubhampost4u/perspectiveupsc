@@ -15,7 +15,7 @@ const ForgotPassword = () => {
   const [step, setStep] = useState(1); // 1: Enter email, 2: Enter token and new password
   const [formData, setFormData] = useState({
     email: '',
-    resetToken: '',
+    otp: '',
     newPassword: '',
     confirmPassword: ''
   });
