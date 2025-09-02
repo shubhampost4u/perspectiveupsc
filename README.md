@@ -483,8 +483,8 @@ kubectl logs -f deployment/perspectiveupsc
 ## 📞 Support & Contact
 
 ### Admin Credentials (Default)
-- **Email**: perspectiveupsc1@gmail.com
-- **Password**: perspective@2025
+- **Email**: #####
+- **Password**: ######
 
 ### Development Team
 - **Primary Developer**: AI Engineering Team
