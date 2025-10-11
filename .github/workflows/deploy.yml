@@ -1,0 +1,86 @@
+# GitHub Actions Workflow for PerspectiveUPSC
+# Optional: Automated deployment on push to main branch
+# 
+# Setup Instructions:
+# 1. Go to your GitHub repository → Settings → Secrets and variables → Actions
+# 2. Add the following secrets:
+#    - GCP_SSH_PRIVATE_KEY: Your SSH private key for GCP VM
+#    - GCP_VM_USER: Your GCP VM username (usually your Google email prefix)
+#    - GCP_VM_IP: Your GCP VM static IP address
+#
+# This workflow will:
+# - Run on every push to main branch
+# - SSH into your GCP VM
+# - Pull latest changes
+# - Update dependencies
+# - Rebuild frontend
+# - Restart backend service
+
+name: Deploy to GCP VM
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:  # Allows manual triggering
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 🚀 Deploy to Production Server
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.GCP_VM_IP }}
+        username: ${{ secrets.GCP_VM_USER }}
+        key: ${{ secrets.GCP_SSH_PRIVATE_KEY }}
+        script: |
+          echo "=========================================="
+          echo "Starting deployment..."
+          echo "=========================================="
+          
+          # Navigate to app directory
+          cd /var/www/perspectiveupsc
+          
+          # Pull latest changes
+          echo "📥 Pulling latest changes..."
+          git pull origin main
+          
+          # Update backend
+          echo "🔧 Updating backend..."
+          cd backend
+          source venv/bin/activate
+          pip install -r requirements.txt
+          cd ..
+          
+          # Update frontend
+          echo "🔧 Updating frontend..."
+          cd frontend
+          yarn install --silent
+          yarn build
+          cd ..
+          
+          # Restart backend
+          echo "🔄 Restarting backend..."
+          pm2 restart perspectiveupsc-backend
+          
+          # Reload Nginx
+          echo "🔄 Reloading Nginx..."
+          sudo nginx -t && sudo systemctl reload nginx
+          
+          echo "=========================================="
+          echo "✅ Deployment complete!"
+          echo "=========================================="
+          
+          # Show status
+          pm2 status
+          
+    - name: 📧 Notify on Success
+      if: success()
+      run: |
+        echo "✅ Deployment to www.perspectiveupsc.com successful!"
+        
+    - name: ❌ Notify on Failure
+      if: failure()
+      run: |
+        echo "❌ Deployment failed! Check the logs above."
