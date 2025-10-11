@@ -16,9 +16,14 @@ def create_admin_user(email, password, name):
     """Create an admin user in the database"""
     
     # Connect to MongoDB
-    mongo_url = os.environ.get("MONGO_URL", "mongodb://localhost:27017/perspectiveupsc")
+    mongo_url = os.environ.get("MONGO_URL", "mongodb://localhost:27017")
+    db_name = os.environ.get("DB_NAME", "test_database")
     client = MongoClient(mongo_url)
-    db = client.get_database()
+    db = client[db_name]
+    
+    print(f"🔌 Connected to MongoDB: {mongo_url}")
+    print(f"📁 Using database: {db_name}")
+    print()
     
     # Check if admin already exists
     existing_admin = db.users.find_one({"email": email})
