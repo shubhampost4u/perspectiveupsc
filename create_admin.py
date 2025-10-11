@@ -43,6 +43,7 @@ def create_admin_user(email, password, name):
         "password": hashed_password,
         "name": name,
         "role": "admin",
+        "is_active": True,
         "created_at": datetime.now(timezone.utc)
     }
     
