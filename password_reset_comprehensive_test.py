@@ -13,7 +13,7 @@ from datetime import datetime
 class PasswordResetTester:
     def __init__(self):
         # Use the production URL from frontend/.env
-        self.base_url = "https://upscpractice.preview.emergentagent.com/api"
+        self.base_url = "https://convo-preserver-1.preview.emergentagent.com/api"
         self.test_results = []
         
     def log_result(self, test_name, success, message, details=None):

@@ -9,7 +9,7 @@ import re
 from datetime import datetime
 
 def test_complete_reset_flow():
-    base_url = "https://upscpractice.preview.emergentagent.com/api"
+    base_url = "https://convo-preserver-1.preview.emergentagent.com/api"
     
     print("🔐 Testing Complete Password Reset Flow")
     print("="*50)
