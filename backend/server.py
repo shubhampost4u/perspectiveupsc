@@ -470,6 +470,9 @@ async def get_current_user_flexible(
         user = await db.users.find_one({"email": email})
         if user is None:
             raise credentials_exception
+        # Ensure password field exists for Pydantic validation
+        if 'password' not in user:
+            user['password'] = ""
         return User(**user)
     
     raise credentials_exception
