@@ -136,6 +136,9 @@ function App() {
               </PublicRoute>
             } />
 
+            {/* Google OAuth Callback - No Auth Required */}
+            <Route path="/auth/google/callback" element={<GoogleAuthCallback />} />
+
             {/* Protected Routes */}
             <Route path="/admin" element={
               <ProtectedRoute requireAdmin={true}>
