@@ -106,10 +106,12 @@
 
 ISSUE: "Delete test feature in admin login is not working" - RESOLVED ✅
 
+CURRENT TASK: "Google Sign-in feature implementation and testing" - IN PROGRESS
+
 NEW REQUIREMENTS: 
-1. Test deactivation/visibility control for students
-2. Sales cart functionality for bundling tests - IMPLEMENTING
-3. Update email settings with new SMTP configuration
+1. Google OAuth authentication - IMPLEMENTING & TESTING
+2. Test deactivation/visibility control for students
+3. Sales cart functionality for bundling tests - COMPLETED ✅
 
 ## backend:
   - task: "Cart Functionality with Bundle Discounts"
