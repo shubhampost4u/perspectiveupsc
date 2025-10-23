@@ -37,7 +37,7 @@ ENVIRONMENT = os.environ.get('ENVIRONMENT', 'development')
 IS_PRODUCTION = ENVIRONMENT == 'production'
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-security = HTTPBearer()
+security = HTTPBearer(auto_error=False)  # Make it optional to allow session auth
 
 # Email configuration
 SMTP_SERVER = os.environ.get('SMTP_SERVER', 'smtp.gmail.com')
