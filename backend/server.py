@@ -386,6 +386,9 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     
     if user is None:
         raise credentials_exception
+    # Ensure password field exists for Pydantic validation
+    if 'password' not in user:
+        user['password'] = ""
     return User(**user)
 
 async def require_admin(current_user: User = Depends(get_current_user)):
