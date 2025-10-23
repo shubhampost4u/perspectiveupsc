@@ -444,6 +444,8 @@ async def get_current_user_flexible(
 ) -> User:
     """Get current user from JWT token or session token"""
     
+    logger.info(f"Auth attempt - session_token: {'YES' if session_token else 'NO'}, authorization: {'YES' if authorization else 'NO'}")
+    
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -452,9 +454,13 @@ async def get_current_user_flexible(
     
     # Try session token first (Google auth)
     if session_token:
+        logger.info(f"Attempting session auth with token: {session_token[:10]}...")
         user = await get_user_by_session_token(session_token)
         if user:
+            logger.info(f"Session auth successful for user: {user.email}")
             return user
+        else:
+            logger.warning(f"Session auth failed for token: {session_token[:10]}...")
     
     # Fallback to JWT token (email/password auth)
     if authorization:
