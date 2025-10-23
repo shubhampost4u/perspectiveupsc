@@ -658,6 +658,11 @@ async def logout(response: Response, current_user: User = Depends(get_current_us
 async def get_current_user_info(current_user: User = Depends(get_current_user_flexible)):
     return UserResponse(**current_user.dict())
 
+@api_router.get("/auth/me", response_model=UserResponse)
+async def get_auth_user_info(current_user: User = Depends(get_current_user_flexible)):
+    """Alias for /me endpoint for auth consistency"""
+    return UserResponse(**current_user.dict())
+
 @api_router.post("/forgot-password")
 async def forgot_password(request: ForgotPasswordRequest):
     """Send password reset email to user"""
