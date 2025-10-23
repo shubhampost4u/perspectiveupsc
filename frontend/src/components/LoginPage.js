@@ -55,7 +55,8 @@ const LoginPage = () => {
 
   const handleGoogleSignIn = () => {
     // Redirect to Emergent authentication service
-    const redirectUrl = encodeURIComponent(window.location.origin + '/profile');
+    // User will land at /auth/google/callback with session_id in URL fragment
+    const redirectUrl = encodeURIComponent(window.location.origin + '/auth/google/callback');
     window.location.href = `https://auth.emergentagent.com/?redirect=${redirectUrl}`;
   };
 
