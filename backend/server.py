@@ -592,8 +592,8 @@ async def google_auth_callback(
             value=session_token,
             max_age=7 * 24 * 60 * 60,  # 7 days
             httponly=True,
-            secure=True,
-            samesite="none",
+            secure=IS_PRODUCTION,  # False for localhost, True for production
+            samesite="lax" if not IS_PRODUCTION else "none",  # lax for localhost, none for production
             path="/"
         )
         
