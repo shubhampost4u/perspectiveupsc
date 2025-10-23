@@ -417,7 +417,7 @@ async def get_emergent_user_data(session_id: str) -> Optional[Dict]:
 async def get_user_by_session_token(session_token: str) -> Optional[User]:
     """Get user by session token from database"""
     try:
-        session_data = await db.sessions.find_one({"session_token": session_token})
+        session_data = await db.user_sessions.find_one({"session_token": session_token})
         if not session_data or session_data["expires_at"] < datetime.now(timezone.utc):
             return None
         
