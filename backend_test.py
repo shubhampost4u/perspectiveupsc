@@ -1425,6 +1425,11 @@ def test_cart_functionality_only():
     tester = TestPlatformAPITester()
     return tester.run_cart_tests_only()
 
+def test_google_oauth_only():
+    """Function to run only Google OAuth authentication tests"""
+    tester = TestPlatformAPITester()
+    return tester.run_google_oauth_tests_only()
+
 if __name__ == "__main__":
     import sys
     if len(sys.argv) > 1 and sys.argv[1] == "password-reset":
@@ -1433,5 +1438,7 @@ if __name__ == "__main__":
         sys.exit(test_delete_functionality_only())
     elif len(sys.argv) > 1 and sys.argv[1] == "cart-tests":
         sys.exit(test_cart_functionality_only())
+    elif len(sys.argv) > 1 and sys.argv[1] == "google-oauth":
+        sys.exit(test_google_oauth_only())
     else:
         sys.exit(main())
