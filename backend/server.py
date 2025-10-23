@@ -89,7 +89,7 @@ class PaymentVerification(BaseModel):
 
 class User(UserBase):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    password: Optional[str] = ""  # Optional for Google OAuth users (empty string for OAuth)
+    password: str = ""  # Default empty string for OAuth users
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     is_active: bool = True
 
