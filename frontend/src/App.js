@@ -10,6 +10,7 @@ import TestTaking from "./components/TestTaking";
 import TestSolutions from "./components/TestSolutions";
 import Cart from "./components/Cart";
 import ProfilePage from "./components/ProfilePage";
+import GoogleAuthCallback from "./components/GoogleAuthCallback";
 import { Toaster } from "./components/ui/sonner";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
