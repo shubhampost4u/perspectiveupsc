@@ -114,6 +114,21 @@ NEW REQUIREMENTS:
 3. Sales cart functionality for bundling tests - COMPLETED ✅
 
 ## backend:
+  - task: "Google OAuth Authentication"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: false
+          agent: "main"
+          comment: "Implemented Google OAuth using Emergent authentication service. Fixed User model to make password optional for OAuth users. Updated session storage to use user_sessions collection. Added environment-aware cookie settings. Backend endpoint /api/auth/google ready for testing."
+        - working: false
+          agent: "user"
+          comment: "Manual testing shows 'authentication failed' error. Need to debug the OAuth flow and session processing."
+
   - task: "Cart Functionality with Bundle Discounts"
     implemented: true
     working: true
