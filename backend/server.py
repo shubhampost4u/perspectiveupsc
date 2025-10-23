@@ -554,6 +554,9 @@ async def google_auth_callback(
         
         if existing_user:
             # User exists, update session
+            # Ensure password field exists for Pydantic validation
+            if 'password' not in existing_user:
+                existing_user['password'] = ""
             user = User(**existing_user)
         else:
             # Create new user (auto-assign as student for Google auth)
