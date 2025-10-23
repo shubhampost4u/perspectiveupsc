@@ -201,6 +201,21 @@ NEW REQUIREMENTS:
           comment: "All password reset tests PASSED. API endpoints working correctly. SMTP configured. Gmail security blocks direct auth but system properly falls back to console logging. Complete password reset flow tested and verified."
 
 ## frontend:
+  - task: "Google OAuth Frontend Integration"
+    implemented: true
+    working: false
+    file: "/app/frontend/src/components/GoogleAuthCallback.js, /app/frontend/src/components/LoginPage.js"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: false
+          agent: "main"
+          comment: "Implemented GoogleAuthCallback component to handle OAuth redirect. Updated LoginPage to redirect to Emergent auth service. Added route /auth/google/callback. Frontend extracts session_id from URL fragment and calls backend /api/auth/google endpoint. Beautiful loading and error states implemented."
+        - working: false
+          agent: "user"
+          comment: "Manual testing failed with 'authentication failed'. Need comprehensive testing to identify the root cause."
+
   - task: "Cart Frontend UI"
     implemented: true
     working: true
