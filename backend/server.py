@@ -428,6 +428,9 @@ async def get_user_by_session_token(session_token: str) -> Optional[User]:
         
         user_data = await db.users.find_one({"id": session_data["user_id"]})
         if user_data:
+            # Ensure password field exists for Pydantic validation
+            if 'password' not in user_data:
+                user_data['password'] = ""
             return User(**user_data)
         return None
     except Exception as e:
