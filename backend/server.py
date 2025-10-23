@@ -636,7 +636,7 @@ async def logout(response: Response, current_user: User = Depends(get_current_us
     """Logout user (clear session token)"""
     try:
         # Remove session from database
-        await db.sessions.delete_many({"user_id": current_user.id})
+        await db.user_sessions.delete_many({"user_id": current_user.id})
         
         # Clear session cookie
         response.delete_cookie(
