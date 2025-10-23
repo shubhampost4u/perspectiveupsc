@@ -644,8 +644,8 @@ async def logout(response: Response, current_user: User = Depends(get_current_us
         response.delete_cookie(
             key="session_token",
             path="/",
-            secure=True,
-            samesite="none"
+            secure=IS_PRODUCTION,
+            samesite="lax" if not IS_PRODUCTION else "none"
         )
         
         return {"message": "Logged out successfully"}
