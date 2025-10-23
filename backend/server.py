@@ -562,11 +562,10 @@ async def google_auth_callback(
                 "id": user_id,
                 "email": email,
                 "name": name or email.split("@")[0],  # Use email prefix if name not provided
-                "password_hash": "",  # No password for Google auth users
+                "password": "",  # No password for Google auth users (empty string)
                 "role": UserRole.STUDENT,  # Auto-assign as student
                 "is_active": True,
-                "created_at": datetime.now(timezone.utc),
-                "updated_at": datetime.now(timezone.utc)
+                "created_at": datetime.now(timezone.utc)
             }
             
             await db.users.insert_one(user_data)
