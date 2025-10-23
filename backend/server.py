@@ -578,7 +578,7 @@ async def google_auth_callback(
         )
         
         # Store session in database
-        await db.sessions.update_one(
+        await db.user_sessions.update_one(
             {"user_id": user.id},
             {"$set": session_data.dict()},
             upsert=True
