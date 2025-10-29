@@ -1554,6 +1554,375 @@ async def debug_users():
         })
     return {"users": result, "count": len(result)}
 
+
+# ===== ANALYTICS ENDPOINTS =====
+
+@api_router.get("/admin/analytics/overview")
+async def get_analytics_overview(
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    admin: User = Depends(require_admin)
+):
+    """Get comprehensive analytics overview"""
+    try:
+        # Parse dates
+        if start_date:
+            start = datetime.fromisoformat(start_date.replace('Z', '+00:00'))
+        else:
+            start = datetime.now(timezone.utc) - timedelta(days=30)
+        
+        if end_date:
+            end = datetime.fromisoformat(end_date.replace('Z', '+00:00'))
+        else:
+            end = datetime.now(timezone.utc)
+        
+        # Total revenue (all time)
+        total_revenue_result = await db.purchases.aggregate([
+            {"$group": {"_id": None, "total": {"$sum": "$amount"}}}
+        ]).to_list(1)
+        total_revenue = total_revenue_result[0]["total"] if total_revenue_result else 0
+        
+        # Revenue in date range
+        period_revenue_result = await db.purchases.aggregate([
+            {"$match": {"created_at": {"$gte": start, "$lte": end}}},
+            {"$group": {"_id": None, "total": {"$sum": "$amount"}}}
+        ]).to_list(1)
+        period_revenue = period_revenue_result[0]["total"] if period_revenue_result else 0
+        
+        # Today's revenue
+        today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+        today_revenue_result = await db.purchases.aggregate([
+            {"$match": {"created_at": {"$gte": today_start}}},
+            {"$group": {"_id": None, "total": {"$sum": "$amount"}}}
+        ]).to_list(1)
+        today_revenue = today_revenue_result[0]["total"] if today_revenue_result else 0
+        
+        # This month's revenue
+        month_start = datetime.now(timezone.utc).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        month_revenue_result = await db.purchases.aggregate([
+            {"$match": {"created_at": {"$gte": month_start}}},
+            {"$group": {"_id": None, "total": {"$sum": "$amount"}}}
+        ]).to_list(1)
+        month_revenue = month_revenue_result[0]["total"] if month_revenue_result else 0
+        
+        # Total orders
+        total_orders = await db.purchases.count_documents({})
+        period_orders = await db.purchases.count_documents({
+            "created_at": {"$gte": start, "$lte": end}
+        })
+        
+        # Average order value
+        avg_order_value = total_revenue / total_orders if total_orders > 0 else 0
+        
+        # Total students
+        total_students = await db.users.count_documents({"role": "student"})
+        
+        # New students in period
+        new_students = await db.users.count_documents({
+            "role": "student",
+            "created_at": {"$gte": start, "$lte": end}
+        })
+        
+        # Active users (last 7 days)
+        week_ago = datetime.now(timezone.utc) - timedelta(days=7)
+        active_users_7d = await db.test_results.distinct("user_id", {
+            "submitted_at": {"$gte": week_ago}
+        })
+        
+        # Active users (last 30 days)
+        month_ago = datetime.now(timezone.utc) - timedelta(days=30)
+        active_users_30d = await db.test_results.distinct("user_id", {
+            "submitted_at": {"$gte": month_ago}
+        })
+        
+        # Total tests
+        total_tests = await db.tests.count_documents({})
+        
+        # Total test attempts
+        total_attempts = await db.test_results.count_documents({})
+        period_attempts = await db.test_results.count_documents({
+            "submitted_at": {"$gte": start, "$lte": end}
+        })
+        
+        return {
+            "revenue": {
+                "total": round(total_revenue, 2),
+                "period": round(period_revenue, 2),
+                "today": round(today_revenue, 2),
+                "this_month": round(month_revenue, 2),
+                "average_order_value": round(avg_order_value, 2)
+            },
+            "orders": {
+                "total": total_orders,
+                "period": period_orders
+            },
+            "students": {
+                "total": total_students,
+                "new_in_period": new_students,
+                "active_7d": len(active_users_7d),
+                "active_30d": len(active_users_30d)
+            },
+            "tests": {
+                "total": total_tests,
+                "total_attempts": total_attempts,
+                "period_attempts": period_attempts
+            }
+        }
+    except Exception as e:
+        logger.error(f"Analytics overview error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/admin/analytics/revenue-chart")
+async def get_revenue_chart(
+    period: str = "daily",  # daily, weekly, monthly
+    days: int = 30,
+    admin: User = Depends(require_admin)
+):
+    """Get revenue chart data"""
+    try:
+        end_date = datetime.now(timezone.utc)
+        start_date = end_date - timedelta(days=days)
+        
+        if period == "daily":
+            group_format = "%Y-%m-%d"
+        elif period == "weekly":
+            group_format = "%Y-W%U"
+        else:  # monthly
+            group_format = "%Y-%m"
+        
+        pipeline = [
+            {"$match": {"created_at": {"$gte": start_date, "$lte": end_date}}},
+            {"$group": {
+                "_id": {"$dateToString": {"format": group_format, "date": "$created_at"}},
+                "revenue": {"$sum": "$amount"},
+                "count": {"$sum": 1}
+            }},
+            {"$sort": {"_id": 1}}
+        ]
+        
+        results = await db.purchases.aggregate(pipeline).to_list(None)
+        
+        return {
+            "labels": [r["_id"] for r in results],
+            "revenue": [round(r["revenue"], 2) for r in results],
+            "orders": [r["count"] for r in results]
+        }
+    except Exception as e:
+        logger.error(f"Revenue chart error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/admin/analytics/top-tests")
+async def get_top_tests(
+    limit: int = 10,
+    admin: User = Depends(require_admin)
+):
+    """Get top selling tests"""
+    try:
+        pipeline = [
+            {"$group": {
+                "_id": "$test_id",
+                "revenue": {"$sum": "$amount"},
+                "count": {"$sum": 1}
+            }},
+            {"$sort": {"revenue": -1}},
+            {"$limit": limit}
+        ]
+        
+        results = await db.purchases.aggregate(pipeline).to_list(None)
+        
+        # Get test details
+        top_tests = []
+        for r in results:
+            test = await db.tests.find_one({"id": r["_id"]})
+            if test:
+                top_tests.append({
+                    "test_id": r["_id"],
+                    "test_name": test.get("title", "Unknown"),
+                    "revenue": round(r["revenue"], 2),
+                    "sales": r["count"]
+                })
+        
+        return top_tests
+    except Exception as e:
+        logger.error(f"Top tests error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/admin/analytics/bundle-breakdown")
+async def get_bundle_breakdown(admin: User = Depends(require_admin)):
+    """Get bundle purchase breakdown"""
+    try:
+        # Get bundle orders
+        bundle_orders = await db.bundle_orders.find({}).to_list(None)
+        
+        breakdown = {
+            "2-4_tests": {"count": 0, "revenue": 0, "discount_percent": 10},
+            "5-9_tests": {"count": 0, "revenue": 0, "discount_percent": 15},
+            "10+_tests": {"count": 0, "revenue": 0, "discount_percent": 25}
+        }
+        
+        for order in bundle_orders:
+            test_count = len(order.get("test_ids", []))
+            amount = order.get("final_amount", 0)
+            
+            if 2 <= test_count <= 4:
+                breakdown["2-4_tests"]["count"] += 1
+                breakdown["2-4_tests"]["revenue"] += amount
+            elif 5 <= test_count <= 9:
+                breakdown["5-9_tests"]["count"] += 1
+                breakdown["5-9_tests"]["revenue"] += amount
+            elif test_count >= 10:
+                breakdown["10+_tests"]["count"] += 1
+                breakdown["10+_tests"]["revenue"] += amount
+        
+        return breakdown
+    except Exception as e:
+        logger.error(f"Bundle breakdown error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/admin/analytics/user-growth")
+async def get_user_growth(
+    days: int = 30,
+    admin: User = Depends(require_admin)
+):
+    """Get user registration growth"""
+    try:
+        end_date = datetime.now(timezone.utc)
+        start_date = end_date - timedelta(days=days)
+        
+        pipeline = [
+            {"$match": {
+                "role": "student",
+                "created_at": {"$gte": start_date, "$lte": end_date}
+            }},
+            {"$group": {
+                "_id": {"$dateToString": {"format": "%Y-%m-%d", "date": "$created_at"}},
+                "count": {"$sum": 1}
+            }},
+            {"$sort": {"_id": 1}}
+        ]
+        
+        results = await db.users.aggregate(pipeline).to_list(None)
+        
+        # Fill in missing dates with 0
+        all_dates = []
+        current = start_date
+        while current <= end_date:
+            all_dates.append(current.strftime("%Y-%m-%d"))
+            current += timedelta(days=1)
+        
+        data_dict = {r["_id"]: r["count"] for r in results}
+        
+        return {
+            "labels": all_dates,
+            "registrations": [data_dict.get(date, 0) for date in all_dates]
+        }
+    except Exception as e:
+        logger.error(f"User growth error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/admin/analytics/test-performance")
+async def get_test_performance(admin: User = Depends(require_admin)):
+    """Get test performance metrics"""
+    try:
+        pipeline = [
+            {"$group": {
+                "_id": "$test_id",
+                "attempts": {"$sum": 1},
+                "avg_score": {"$avg": "$score"},
+                "completed": {"$sum": {"$cond": [{"$eq": ["$status", "completed"]}, 1, 0]}}
+            }}
+        ]
+        
+        results = await db.test_results.aggregate(pipeline).to_list(None)
+        
+        performance = []
+        for r in results:
+            test = await db.tests.find_one({"id": r["_id"]})
+            if test:
+                completion_rate = (r["completed"] / r["attempts"] * 100) if r["attempts"] > 0 else 0
+                performance.append({
+                    "test_id": r["_id"],
+                    "test_name": test.get("title", "Unknown"),
+                    "attempts": r["attempts"],
+                    "avg_score": round(r["avg_score"], 2) if r["avg_score"] else 0,
+                    "completion_rate": round(completion_rate, 2)
+                })
+        
+        return sorted(performance, key=lambda x: x["attempts"], reverse=True)
+    except Exception as e:
+        logger.error(f"Test performance error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/admin/analytics/payment-methods")
+async def get_payment_methods(admin: User = Depends(require_admin)):
+    """Get payment method breakdown"""
+    try:
+        # Note: This would require storing payment method info in purchases
+        # For now, return mock data structure
+        pipeline = [
+            {"$group": {
+                "_id": "$payment_method",
+                "count": {"$sum": 1},
+                "revenue": {"$sum": "$amount"}
+            }}
+        ]
+        
+        results = await db.purchases.aggregate(pipeline).to_list(None)
+        
+        if not results or all(r["_id"] is None for r in results):
+            # Return default structure if no payment method data
+            return {
+                "methods": [
+                    {"method": "Cards", "count": 0, "revenue": 0},
+                    {"method": "UPI", "count": 0, "revenue": 0},
+                    {"method": "Net Banking", "count": 0, "revenue": 0},
+                    {"method": "Wallets", "count": 0, "revenue": 0}
+                ]
+            }
+        
+        return {
+            "methods": [
+                {
+                    "method": r["_id"] or "Not specified",
+                    "count": r["count"],
+                    "revenue": round(r["revenue"], 2)
+                }
+                for r in results
+            ]
+        }
+    except Exception as e:
+        logger.error(f"Payment methods error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/admin/analytics/recent-purchases")
+async def get_recent_purchases(
+    limit: int = 10,
+    admin: User = Depends(require_admin)
+):
+    """Get recent purchase transactions"""
+    try:
+        purchases = await db.purchases.find({}).sort("created_at", -1).limit(limit).to_list(None)
+        
+        result = []
+        for p in purchases:
+            user = await db.users.find_one({"id": p.get("user_id")})
+            test = await db.tests.find_one({"id": p.get("test_id")})
+            
+            result.append({
+                "purchase_id": p.get("id"),
+                "student_name": user.get("name", "Unknown") if user else "Unknown",
+                "student_email": user.get("email", "Unknown") if user else "Unknown",
+                "test_name": test.get("title", "Unknown") if test else "Unknown",
+                "amount": p.get("amount", 0),
+                "payment_id": p.get("payment_id", "N/A"),
+                "created_at": p.get("created_at").isoformat() if p.get("created_at") else None
+            })
+        
+        return result
+    except Exception as e:
+        logger.error(f"Recent purchases error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 # ===== BASIC ROUTES =====
 @api_router.get("/")
 async def root():
