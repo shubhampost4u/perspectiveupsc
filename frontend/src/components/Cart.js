@@ -89,7 +89,7 @@ const Cart = () => {
       const response = await axios.post(`${API}/cart/checkout`, {}, axiosConfig);
       
       const options = {
-        key: process.env.REACT_APP_RAZORPAY_KEY_ID || 'rzp_test_R9g6dBU2gHpJuC',
+        key: response.data.key_id, // Get key from backend response
         amount: response.data.amount * 100,
         currency: response.data.currency,
         name: 'PerspectiveUPSC',
