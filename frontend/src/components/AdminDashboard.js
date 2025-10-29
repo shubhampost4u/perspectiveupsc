@@ -837,14 +837,7 @@ const AdminDashboard = () => {
 
           {/* Analytics Tab */}
           <TabsContent value="analytics" className="space-y-6">
-            <h2 className="text-2xl font-bold text-gray-900">Analytics</h2>
-            <Card>
-              <CardContent className="p-8 text-center">
-                <BarChart3 className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Analytics Dashboard</h3>
-                <p className="text-gray-600">Detailed analytics and reporting features coming soon!</p>
-              </CardContent>
-            </Card>
+            <AnalyticsDashboard token={token} />
           </TabsContent>
         </Tabs>
       </main>
