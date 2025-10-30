@@ -91,11 +91,11 @@ const LandingPage = () => {
       <section className="py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto text-center">
           <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
-            Master UPSC with
+            Master UPSC EO/AO & APFC with
             <span className="text-blue-600"> Confidence</span>
           </h1>
           <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-            Comprehensive mock tests, detailed analytics, and expert-curated content to help you excel in UPSC Civil Services Examination.
+            Comprehensive mock tests for UPSC Enforcement Officer/Accounts Officer & APFC examinations. Get detailed analytics and expert-curated content to excel in your exam preparation.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" onClick={handleGetStarted} className="text-lg px-8 py-6">
