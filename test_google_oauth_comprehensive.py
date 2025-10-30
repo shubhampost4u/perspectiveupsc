@@ -14,7 +14,7 @@ import uuid
 class GoogleOAuthTester:
     def __init__(self):
         # Get backend URL from environment
-        frontend_url = os.environ.get('REACT_APP_BACKEND_URL', 'https://convo-preserver-1.preview.emergentagent.com')
+        frontend_url = os.environ.get('REACT_APP_BACKEND_URL', 'https://prepmaster-11.preview.emergentagent.com')
         self.base_url = f"{frontend_url}/api"
         
         # Database connection

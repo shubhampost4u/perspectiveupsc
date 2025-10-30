@@ -7,7 +7,7 @@ import requests
 import json
 
 def test_actual_token_reset():
-    base_url = "https://convo-preserver-1.preview.emergentagent.com/api"
+    base_url = "https://prepmaster-11.preview.emergentagent.com/api"
     
     # Use the token and email from the logs
     test_email = "complete_test_060824@perspectiveupsc.com"
