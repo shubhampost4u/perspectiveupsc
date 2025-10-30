@@ -173,10 +173,8 @@ function App() {
 
             <Route path="/profile" element={<ProfilePage />} />
 
-            {/* Default redirect */}
-            <Route path="/" element={
-              <Navigate to="/login" replace />
-            } />
+            {/* Landing Page */}
+            <Route path="/" element={<LandingPage />} />
           </Routes>
         </BrowserRouter>
         <Toaster />
