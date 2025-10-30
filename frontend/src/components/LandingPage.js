@@ -122,7 +122,7 @@ const LandingPage = () => {
               <div className="text-gray-600 mt-2">Bundle Savings</div>
             </div>
             <div>
-              <div className="text-4xl font-bold text-green-600">₹99</div>
+              <div className="text-4xl font-bold text-green-600">₹49</div>
               <div className="text-gray-600 mt-2">Starting Price</div>
             </div>
           </div>
