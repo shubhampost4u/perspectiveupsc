@@ -752,6 +752,33 @@ async def reset_password(request: ResetPasswordRequest):
     
     return {"message": "Password reset successfully"}
 
+
+# ===== PUBLIC ROUTES =====
+@api_router.get("/public/tests")
+async def get_public_tests():
+    """Get all active tests for public display (no authentication required)"""
+    try:
+        # Get all active tests, only return necessary fields
+        tests = await db.tests.find(
+            {"is_active": True},
+            {
+                "id": 1,
+                "title": 1,
+                "description": 1,
+                "price": 1,
+                "duration": 1,
+                "total_questions": 1,
+                "subject": 1,
+                "created_at": 1,
+                "_id": 0
+            }
+        ).sort("created_at", -1).to_list(None)
+        
+        return tests
+    except Exception as e:
+        logger.error(f"Error fetching public tests: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch tests")
+
 # ===== ADMIN ROUTES =====
 @api_router.post("/admin/tests", response_model=TestResponse)
 async def create_test(test: TestCreate, admin: User = Depends(require_admin)):
