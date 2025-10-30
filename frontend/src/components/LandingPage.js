@@ -118,12 +118,12 @@ const LandingPage = () => {
               <div className="text-gray-600 mt-2">Questions</div>
             </div>
             <div>
-              <div className="text-4xl font-bold text-blue-600">500+</div>
-              <div className="text-gray-600 mt-2">Happy Students</div>
+              <div className="text-4xl font-bold text-purple-600">25% OFF</div>
+              <div className="text-gray-600 mt-2">Bundle Savings</div>
             </div>
             <div>
-              <div className="text-4xl font-bold text-blue-600">95%</div>
-              <div className="text-gray-600 mt-2">Success Rate</div>
+              <div className="text-4xl font-bold text-green-600">₹99</div>
+              <div className="text-gray-600 mt-2">Starting Price</div>
             </div>
           </div>
         </div>
