@@ -130,28 +130,40 @@ const LandingPage = () => {
       </section>
 
       {/* Limited Time Offer Banner */}
-      <section className="py-6 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-orange-500 via-red-500 to-pink-500">
+      <section className="py-8 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-orange-500 via-red-500 to-pink-500">
         <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row items-center justify-between text-white text-center md:text-left">
-            <div className="mb-4 md:mb-0">
-              <div className="flex items-center justify-center md:justify-start gap-2 mb-2">
-                <span className="animate-pulse text-2xl">🔥</span>
-                <h3 className="text-2xl md:text-3xl font-bold">MEGA SALE ALERT!</h3>
-                <span className="animate-pulse text-2xl">🔥</span>
+          <div className="flex flex-col md:flex-row items-center justify-between text-white gap-6">
+            <div className="flex-1 text-center md:text-left">
+              <div className="flex items-center justify-center md:justify-start gap-2 mb-3">
+                <span className="animate-pulse text-2xl">🎓</span>
+                <h3 className="text-2xl md:text-4xl font-extrabold tracking-tight">MEGA SALE ON UPSC EO/AO & APFC TESTS!</h3>
+                <span className="animate-pulse text-2xl">🎓</span>
               </div>
-              <p className="text-lg md:text-xl font-medium">
-                Buy MORE, Save MORE! Get up to 25% OFF on test bundles
+              <p className="text-lg md:text-xl font-semibold mb-2">
+                🚀 Crack UPSC Enforcement Officer/Accounts Officer & APFC Exams with Confidence
               </p>
+              <p className="text-base md:text-lg font-medium opacity-95">
+                ⚡ Specially curated mock tests for EO/AO & APFC aspirants | Buy in Bulk & Save Big!
+              </p>
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mt-4">
+                <div className="bg-white/90 text-red-600 px-4 py-2 rounded-full font-bold text-sm shadow-lg">
+                  💰 Starting at just ₹49
+                </div>
+                <div className="bg-yellow-300 text-gray-900 px-4 py-2 rounded-full font-bold text-sm shadow-lg animate-pulse">
+                  🏆 25% OFF on 10+ Tests
+                </div>
+              </div>
             </div>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <div className="bg-white/20 backdrop-blur-lg rounded-lg px-6 py-3 border-2 border-white/50">
+            <div className="flex flex-col sm:flex-row gap-3 items-center">
+              <div className="bg-white/20 backdrop-blur-lg rounded-xl px-6 py-4 border-2 border-white/50 shadow-2xl text-center min-w-[160px]">
                 <div className="text-3xl font-bold">💰 SAVE BIG</div>
-                <div className="text-sm">Limited Period Offer</div>
+                <div className="text-sm mt-1">Limited Period Offer</div>
+                <div className="text-xs mt-1 opacity-90">On EO/AO & APFC Tests</div>
               </div>
               <Button 
                 size="lg"
                 onClick={handleGetStarted}
-                className="bg-white text-red-600 hover:bg-gray-100 font-bold text-lg shadow-2xl animate-bounce"
+                className="bg-white text-red-600 hover:bg-gray-100 font-bold text-lg shadow-2xl animate-bounce px-8 py-6"
               >
                 Grab Deal Now! 🎯
               </Button>
