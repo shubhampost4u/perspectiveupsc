@@ -129,6 +129,37 @@ const LandingPage = () => {
         </div>
       </section>
 
+      {/* Limited Time Offer Banner */}
+      <section className="py-6 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-orange-500 via-red-500 to-pink-500">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col md:flex-row items-center justify-between text-white text-center md:text-left">
+            <div className="mb-4 md:mb-0">
+              <div className="flex items-center justify-center md:justify-start gap-2 mb-2">
+                <span className="animate-pulse text-2xl">🔥</span>
+                <h3 className="text-2xl md:text-3xl font-bold">MEGA SALE ALERT!</h3>
+                <span className="animate-pulse text-2xl">🔥</span>
+              </div>
+              <p className="text-lg md:text-xl font-medium">
+                Buy MORE, Save MORE! Get up to 25% OFF on test bundles
+              </p>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="bg-white/20 backdrop-blur-lg rounded-lg px-6 py-3 border-2 border-white/50">
+                <div className="text-3xl font-bold">💰 SAVE BIG</div>
+                <div className="text-sm">Limited Period Offer</div>
+              </div>
+              <Button 
+                size="lg"
+                onClick={handleGetStarted}
+                className="bg-white text-red-600 hover:bg-gray-100 font-bold text-lg shadow-2xl animate-bounce"
+              >
+                Grab Deal Now! 🎯
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Features Section */}
       <section id="features" className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
         <div className="max-w-7xl mx-auto">
