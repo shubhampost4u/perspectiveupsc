@@ -765,23 +765,24 @@ async def reset_password(request: ResetPasswordRequest):
 async def get_public_tests():
     """Get all active tests for public display (no authentication required)"""
     try:
-        # Get all active tests, only return necessary fields
-        tests = await db.tests.find(
-            {"is_active": True},
-            {
-                "id": 1,
-                "title": 1,
-                "description": 1,
-                "price": 1,
-                "duration": 1,
-                "total_questions": 1,
-                "subject": 1,
-                "created_at": 1,
-                "_id": 0
-            }
-        ).sort("created_at", -1).to_list(None)
+        # Get all active tests
+        tests = await db.tests.find({"is_active": True}).sort("created_at", -1).to_list(None)
         
-        return tests
+        # Format tests for public display
+        public_tests = []
+        for test in tests:
+            public_tests.append({
+                "id": test.get("id"),
+                "title": test.get("title"),
+                "description": test.get("description"),
+                "price": test.get("price"),
+                "duration_minutes": test.get("duration_minutes"),
+                "total_questions": len(test.get("questions", [])),
+                "subject": test.get("subject"),
+                "created_at": test.get("created_at")
+            })
+        
+        return public_tests
     except Exception as e:
         logger.error(f"Error fetching public tests: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to fetch tests")
