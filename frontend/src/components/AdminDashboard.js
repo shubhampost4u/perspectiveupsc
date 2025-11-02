@@ -857,6 +857,89 @@ const AdminDashboard = () => {
             </div>
           </TabsContent>
 
+          {/* Edit Test Dialog */}
+          <Dialog open={showEditTest} onOpenChange={setShowEditTest}>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Edit Test</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-6">
+                {/* Test Details */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label>Test Title</Label>
+                    <Input
+                      name="title"
+                      value={testForm.title}
+                      onChange={handleTestFormChange}
+                      placeholder="Enter test title"
+                    />
+                  </div>
+                  <div>
+                    <Label>Price (₹)</Label>
+                    <Input
+                      name="price"
+                      type="number"
+                      step="0.01"
+                      value={testForm.price}
+                      onChange={handleTestFormChange}
+                      placeholder="Enter price"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label>Description</Label>
+                  <Textarea
+                    name="description"
+                    value={testForm.description}
+                    onChange={handleTestFormChange}
+                    placeholder="Enter test description"
+                    rows={4}
+                  />
+                </div>
+
+                <div>
+                  <Label>Duration (Minutes)</Label>
+                  <Input
+                    name="duration_minutes"
+                    type="number"
+                    value={testForm.duration_minutes}
+                    onChange={handleTestFormChange}
+                    placeholder="Enter duration in minutes"
+                  />
+                </div>
+
+                <Alert>
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    You can edit the test details even if students have already purchased it. Questions cannot be edited to maintain test integrity.
+                  </AlertDescription>
+                </Alert>
+
+                {/* Action Buttons */}
+                <div className="flex justify-end space-x-3">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setShowEditTest(false);
+                      setEditingTest(null);
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={updateTest}
+                    disabled={loading}
+                    className="bg-gradient-to-r from-blue-600 to-blue-700"
+                  >
+                    {loading ? 'Updating...' : 'Update Test'}
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+
           {/* Students Tab */}
           <TabsContent value="students" className="space-y-6">
             <h2 className="text-2xl font-bold text-gray-900">Students</h2>
