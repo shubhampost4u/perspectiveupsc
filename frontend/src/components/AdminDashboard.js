@@ -44,6 +44,8 @@ const AdminDashboard = () => {
   const [bulkFile, setBulkFile] = useState(null);
   const [bulkQuestions, setBulkQuestions] = useState([]);
   const [uploadFormatInfo, setUploadFormatInfo] = useState(null);
+  const [editingTest, setEditingTest] = useState(null); // For tracking which test is being edited
+  const [showEditTest, setShowEditTest] = useState(false); // For showing edit dialog
 
   const [testForm, setTestForm] = useState({
     title: '',
