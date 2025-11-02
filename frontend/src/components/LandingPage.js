@@ -277,7 +277,6 @@ const LandingPage = () => {
                       <div className="pt-4 border-t">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center text-2xl font-bold text-blue-600">
-                            <DollarSign className="w-6 h-6" />
                             <span>₹{test.price}</span>
                           </div>
                           <Button 
