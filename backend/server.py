@@ -839,6 +839,46 @@ async def delete_test(test_id: str, admin: User = Depends(require_admin)):
     
     return {"message": "Test deleted successfully"}
 
+@api_router.put("/admin/tests/{test_id}", response_model=TestResponse)
+async def update_test(test_id: str, test_update: TestUpdate, admin: User = Depends(require_admin)):
+    """Update a test created by the admin. Can update even if test has been purchased."""
+    # Check if test exists and belongs to the admin
+    existing_test = await db.tests.find_one({"id": test_id, "created_by": admin.id})
+    if not existing_test:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Test not found or you don't have permission to update it"
+        )
+    
+    # Prepare update data - only include fields that are provided
+    update_data = {}
+    if test_update.title is not None:
+        update_data["title"] = test_update.title
+    if test_update.description is not None:
+        update_data["description"] = test_update.description
+    if test_update.price is not None:
+        update_data["price"] = test_update.price
+    if test_update.duration_minutes is not None:
+        update_data["duration_minutes"] = test_update.duration_minutes
+    if test_update.questions is not None:
+        # Convert questions
+        questions = [Question(**q.dict()) for q in test_update.questions]
+        update_data["questions"] = [q.dict() for q in questions]
+    
+    # Update the test
+    if update_data:
+        await db.tests.update_one(
+            {"id": test_id, "created_by": admin.id},
+            {"$set": update_data}
+        )
+    
+    # Fetch and return updated test
+    updated_test = await db.tests.find_one({"id": test_id})
+    return TestResponse(
+        **updated_test,
+        questions_count=len(updated_test["questions"])
+    )
+
 @api_router.get("/admin/students", response_model=List[UserResponse])
 async def get_students(admin: User = Depends(require_admin)):
     students = await db.users.find({"role": UserRole.STUDENT}).to_list(1000)
