@@ -194,7 +194,7 @@ const AdminDashboard = () => {
       title: test.title,
       description: test.description,
       price: test.price.toString(),
-      duration_minutes: test.duration.toString(),
+      duration_minutes: test.duration_minutes.toString(),
       questions: test.questions || []
     });
     setShowEditTest(true);
