@@ -262,7 +262,7 @@ const LandingPage = () => {
                       
                       <div className="flex items-center text-gray-600">
                         <Clock className="w-4 h-4 mr-2" />
-                        <span>{test.duration} Minutes</span>
+                        <span>{test.duration_minutes || test.duration || 0} Minutes</span>
                       </div>
 
                       {test.subject && (
