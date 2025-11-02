@@ -188,6 +188,59 @@ const AdminDashboard = () => {
     }
   };
 
+  const startEditTest = (test) => {
+    setEditingTest(test);
+    setTestForm({
+      title: test.title,
+      description: test.description,
+      price: test.price.toString(),
+      duration_minutes: test.duration.toString(),
+      questions: test.questions || []
+    });
+    setShowEditTest(true);
+  };
+
+  const updateTest = async () => {
+    if (!testForm.title || !testForm.description) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const updateData = {
+        title: testForm.title,
+        description: testForm.description,
+        price: parseFloat(testForm.price),
+        duration_minutes: parseInt(testForm.duration_minutes)
+      };
+
+      // Only include questions if they were modified
+      if (testForm.questions && testForm.questions.length > 0) {
+        updateData.questions = testForm.questions;
+      }
+
+      await axios.put(`${API}/admin/tests/${editingTest.id}`, updateData, axiosConfig);
+
+      toast.success('Test updated successfully!');
+      setShowEditTest(false);
+      setEditingTest(null);
+      setTestForm({
+        title: '',
+        description: '',
+        price: '',
+        duration_minutes: '',
+        questions: []
+      });
+      fetchTests();
+    } catch (error) {
+      console.error('Error updating test:', error);
+      toast.error(error.response?.data?.detail || 'Failed to update test');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const deleteTest = async (testId, testTitle) => {
     if (!window.confirm(`Are you sure you want to delete the test "${testTitle}"? This action cannot be undone.`)) {
       return;
