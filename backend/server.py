@@ -136,6 +136,13 @@ class TestCreate(BaseModel):
     duration_minutes: int
     questions: List[QuestionCreate]
 
+class TestUpdate(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    price: Optional[float] = None
+    duration_minutes: Optional[int] = None
+    questions: Optional[List[QuestionCreate]] = None
+
 class TestResponse(BaseModel):
     id: str
     title: str
