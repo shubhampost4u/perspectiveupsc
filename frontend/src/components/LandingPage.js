@@ -302,20 +302,18 @@ const LandingPage = () => {
             <div className="mt-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-8 text-white text-center">
               <h3 className="text-3xl font-bold mb-4">Save More with Bundle Offers!</h3>
               <p className="text-xl mb-6">
-                Get up to 25% discount when you purchase multiple tests
+                Get up to 15% discount when you purchase multiple tests
               </p>
-              <div className="grid md:grid-cols-3 gap-4 max-w-3xl mx-auto mb-6">
-                <div className="bg-white/20 backdrop-blur rounded-lg p-4">
-                  <div className="text-2xl font-bold">10% OFF</div>
-                  <div className="text-sm">Buy 2-4 Tests</div>
+              <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto mb-6">
+                <div className="bg-white/20 backdrop-blur rounded-lg p-6">
+                  <div className="text-3xl font-bold">10% OFF</div>
+                  <div className="text-base mt-2">Buy 2-4 Tests</div>
+                  <div className="text-sm mt-1 opacity-90">Perfect for focused preparation</div>
                 </div>
-                <div className="bg-white/20 backdrop-blur rounded-lg p-4">
-                  <div className="text-2xl font-bold">15% OFF</div>
-                  <div className="text-sm">Buy 5-9 Tests</div>
-                </div>
-                <div className="bg-white/20 backdrop-blur rounded-lg p-4">
-                  <div className="text-2xl font-bold">25% OFF</div>
-                  <div className="text-sm">Buy 10+ Tests</div>
+                <div className="bg-white/20 backdrop-blur rounded-lg p-6">
+                  <div className="text-3xl font-bold">15% OFF</div>
+                  <div className="text-base mt-2">Buy 5+ Tests</div>
+                  <div className="text-sm mt-1 opacity-90">Best value for comprehensive practice</div>
                 </div>
               </div>
               <Button 
