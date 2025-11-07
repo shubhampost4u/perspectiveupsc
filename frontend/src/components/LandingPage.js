@@ -150,7 +150,7 @@ const LandingPage = () => {
                   💰 Starting at just ₹49
                 </div>
                 <div className="bg-yellow-300 text-gray-900 px-4 py-2 rounded-full font-bold text-sm shadow-lg animate-pulse">
-                  🏆 25% OFF on 10+ Tests
+                  🏆 Up to 15% OFF on Multiple Tests
                 </div>
               </div>
             </div>
