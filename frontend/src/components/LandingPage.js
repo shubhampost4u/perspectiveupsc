@@ -335,7 +335,7 @@ const LandingPage = () => {
           <h2 className="text-4xl font-bold text-gray-900 mb-6">About Perspective UPSC</h2>
           <p className="text-xl text-gray-600 mb-8">
             We are dedicated to helping UPSC aspirants achieve their dreams through high-quality practice tests, 
-            comprehensive analytics, and expert guidance. Our platform is designed by successful IAS officers and 
+            comprehensive analytics, and expert guidance. Our platform is designed by selected candidates and 
             experienced educators who understand the challenges of UPSC preparation.
           </p>
           <Button size="lg" onClick={handleGetStarted}>
