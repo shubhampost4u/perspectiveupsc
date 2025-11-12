@@ -138,15 +138,15 @@ yarn start
 #### Backend (.env)
 ```env
 MONGO_URL=mongodb://localhost:27017
-DB_NAME=perspectiveupsc
+DB_NAME=your_database_name
 SECRET_KEY=your-secret-key-here
 RAZORPAY_KEY_ID=your-razorpay-key-id
 RAZORPAY_KEY_SECRET=your-razorpay-key-secret
 SMTP_SERVER=smtp.titan.email
 SMTP_PORT=465
-SMTP_USERNAME=admin@perspectiveupsc.com
+SMTP_USERNAME=admin@yourdomain.com
 SMTP_PASSWORD=your-email-password
-FROM_EMAIL=admin@perspectiveupsc.com
+FROM_EMAIL=admin@yourdomain.com
 ```
 
 #### Frontend (.env)
