@@ -1974,7 +1974,7 @@ async def get_revenue_chart(
             {"$sort": {"_id": 1}}
         ]
         
-        results = await db.purchases.aggregate(pipeline).to_list(None)
+        results = await db.purchases.aggregate(pipeline).to_list(10000)
         
         return {
             "labels": [r["_id"] for r in results],
@@ -2002,7 +2002,7 @@ async def get_top_tests(
             {"$limit": limit}
         ]
         
-        results = await db.purchases.aggregate(pipeline).to_list(None)
+        results = await db.purchases.aggregate(pipeline).to_list(10000)
         
         # Get test details
         top_tests = []
@@ -2141,7 +2141,7 @@ async def get_payment_methods(admin: User = Depends(require_admin)):
             }}
         ]
         
-        results = await db.purchases.aggregate(pipeline).to_list(None)
+        results = await db.purchases.aggregate(pipeline).to_list(10000)
         
         if not results or all(r["_id"] is None for r in results):
             # Return default structure if no payment method data
