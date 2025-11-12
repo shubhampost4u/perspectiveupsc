@@ -1355,16 +1355,17 @@ async def download_test_solutions_pdf(test_id: str, current_user: User = Depends
     if current_user.role != UserRole.STUDENT:
         raise HTTPException(status_code=403, detail="Only students can download solutions")
     
-    # Check if student has purchased the test
+    # CRITICAL: Check if student has COMPLETED PAYMENT for the test
     purchase = await db.purchases.find_one({
         "student_id": current_user.id,
-        "test_id": test_id
+        "test_id": test_id,
+        "status": "completed"  # MUST be completed payment
     })
     
     if not purchase:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="You must purchase the test before downloading solutions"
+            detail="You must complete the payment before downloading solutions"
         )
     
     # Check if student has completed the test
