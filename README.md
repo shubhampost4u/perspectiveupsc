@@ -315,9 +315,9 @@ const calculateDiscount = (itemCount) => {
 ```env
 SMTP_SERVER=smtp.titan.email
 SMTP_PORT=465
-SMTP_USERNAME=admin@perspectiveupsc.com
+SMTP_USERNAME=admin@yourdomain.com
 SMTP_PASSWORD=your-app-password
-FROM_EMAIL=admin@perspectiveupsc.com
+FROM_EMAIL=admin@yourdomain.com
 ```
 
 ### Alternative SMTP Providers
