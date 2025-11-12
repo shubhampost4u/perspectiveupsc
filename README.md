@@ -4,6 +4,8 @@
 ![Version](https://img.shields.io/badge/version-2.0.0-green)
 ![Status](https://img.shields.io/badge/status-Production%20Ready-success)
 
+> **🔒 SECURITY NOTICE:** This README contains placeholder credentials for documentation purposes only. **NEVER use these examples in production.** See [CREDENTIALS_TEMPLATE.md](./CREDENTIALS_TEMPLATE.md) for secure credential management guidelines.
+
 A comprehensive online test platform designed for UPSC aspirants, featuring advanced cart functionality, bundle discounts, and robust test management capabilities.
 
 ## 🚀 Features
