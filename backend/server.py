@@ -1289,6 +1289,19 @@ async def get_test_solutions(test_id: str, current_user: User = Depends(get_curr
     if current_user.role != UserRole.STUDENT:
         raise HTTPException(status_code=403, detail="Only students can view solutions")
     
+    # CRITICAL: Check if student has PAID for the test (not just purchased)
+    purchase = await db.purchases.find_one({
+        "student_id": current_user.id,
+        "test_id": test_id,
+        "status": "completed"  # MUST be completed payment
+    })
+    
+    if not purchase:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You must complete the payment before viewing solutions"
+        )
+    
     # Check if student has completed the test
     result = await db.test_results.find_one({
         "student_id": current_user.id,
