@@ -153,14 +153,14 @@ SECRET_KEY=your-super-secure-secret-key-change-this-in-production-32-chars-long
 # Email Configuration (GoDaddy Titan)
 SMTP_SERVER=smtpout.secureserver.net
 SMTP_PORT=587
-SMTP_USERNAME=admin@perspectiveupsc.com
-SMTP_PASSWORD=Perspective@2025
-FROM_EMAIL=admin@perspectiveupsc.com
+SMTP_USERNAME=admin@yourdomain.com
+SMTP_PASSWORD=YOUR_EMAIL_PASSWORD_HERE
+FROM_EMAIL=admin@yourdomain.com
 
 # Payment Gateway (Razorpay LIVE keys)
 RAZORPAY_KEY_ID=rzp_live_YOUR_LIVE_KEY_ID
-RAZORPAY_KEY_SECRET=your_live_key_secret
-RAZORPAY_WEBHOOK_SECRET=your_webhook_secret
+RAZORPAY_KEY_SECRET=YOUR_RAZORPAY_SECRET_KEY_HERE
+RAZORPAY_WEBHOOK_SECRET=YOUR_WEBHOOK_SECRET_HERE
 
 # Application Settings
 ENV=production
