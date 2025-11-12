@@ -27,6 +27,7 @@ const TestSolutions = () => {
   
   const [solutions, setSolutions] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
     fetchSolutions();
