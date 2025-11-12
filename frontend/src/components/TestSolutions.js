@@ -10,7 +10,8 @@ import {
   BookOpen, 
   Clock,
   Target,
-  Award
+  Award,
+  Download
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '../App';
