@@ -773,7 +773,7 @@ async def get_public_tests():
     """Get all active tests for public display (no authentication required)"""
     try:
         # Get all active tests
-        tests = await db.tests.find({"is_active": True}).sort("created_at", -1).to_list(None)
+        tests = await db.tests.find({"is_active": True}).sort("created_at", -1).to_list(1000)
         
         # Format tests for public display
         public_tests = []
