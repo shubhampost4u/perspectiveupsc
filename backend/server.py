@@ -2026,7 +2026,7 @@ async def get_bundle_breakdown(admin: User = Depends(require_admin)):
     """Get bundle purchase breakdown"""
     try:
         # Get bundle orders
-        bundle_orders = await db.bundle_orders.find({}).to_list(None)
+        bundle_orders = await db.bundle_orders.find({}).to_list(10000)
         
         breakdown = {
             "2-4_tests": {"count": 0, "revenue": 0, "discount_percent": 10},
