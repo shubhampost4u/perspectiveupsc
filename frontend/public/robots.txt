@@ -1,0 +1,40 @@
+# Robots.txt for Perspective UPSC - www.perspectiveupsc.com
+# Updated for maximum search engine visibility
+
+# Allow all search engines to crawl entire site
+User-agent: *
+Allow: /
+
+# Allow specific search engine bots
+User-agent: Googlebot
+Allow: /
+
+User-agent: Googlebot-Image
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Slurp
+Allow: /
+
+User-agent: DuckDuckBot
+Allow: /
+
+User-agent: Baiduspider
+Allow: /
+
+User-agent: YandexBot
+Allow: /
+
+# Disallow crawling of admin areas and APIs to prevent indexing sensitive pages
+Disallow: /admin
+Disallow: /api/
+Disallow: /login
+Disallow: /register
+
+# Sitemap location
+Sitemap: https://www.perspectiveupsc.com/sitemap.xml
+
+# Crawl-delay (optional, helps prevent server overload)
+Crawl-delay: 1

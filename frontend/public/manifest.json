@@ -1,0 +1,21 @@
+{
+  "short_name": "Perspective UPSC",
+  "name": "Perspective UPSC - EO/AO & APFC Test Preparation Platform",
+  "description": "Comprehensive mock tests for UPSC Enforcement Officer, Accounts Officer & APFC examinations. Expert-curated content designed by selected candidates.",
+  "icons": [
+    {
+      "src": "favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#2563eb",
+  "background_color": "#ffffff",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "en-IN",
+  "categories": ["education", "productivity"],
+  "screenshots": []
+}
