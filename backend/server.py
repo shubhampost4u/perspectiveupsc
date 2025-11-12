@@ -2075,7 +2075,7 @@ async def get_user_growth(
             {"$sort": {"_id": 1}}
         ]
         
-        results = await db.users.aggregate(pipeline).to_list(None)
+        results = await db.users.aggregate(pipeline).to_list(10000)
         
         # Fill in missing dates with 0
         all_dates = []
