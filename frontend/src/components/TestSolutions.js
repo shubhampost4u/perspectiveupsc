@@ -132,6 +132,15 @@ const TestSolutions = () => {
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back to Dashboard
               </Button>
+              <Button
+                onClick={downloadPDF}
+                disabled={downloading}
+                className="bg-gradient-to-r from-blue-600 to-blue-700 text-white"
+                size="sm"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                {downloading ? 'Downloading...' : 'Download PDF Solutions'}
+              </Button>
               <div>
                 <h1 className="text-xl font-bold text-gray-900">Test Solutions</h1>
                 <p className="text-sm text-gray-600">{solutions.test_title}</p>
