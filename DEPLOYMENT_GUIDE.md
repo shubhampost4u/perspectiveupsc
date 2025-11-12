@@ -1,5 +1,7 @@
 # PerspectiveUPSC - Manual Deployment Guide
 
+> **🔒 SECURITY WARNING:** This guide contains placeholder credentials for documentation purposes only. **ALL placeholder values MUST be replaced with your actual secure credentials.** See [CREDENTIALS_TEMPLATE.md](./CREDENTIALS_TEMPLATE.md) for detailed security guidelines. **NEVER commit real credentials to version control.**
+
 ## 📋 Table of Contents
 1. [Prerequisites](#prerequisites)
 2. [Initial Server Setup](#initial-server-setup)
