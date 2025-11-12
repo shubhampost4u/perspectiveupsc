@@ -49,6 +49,35 @@ const TestSolutions = () => {
     }
   };
 
+  const downloadPDF = async () => {
+    setDownloading(true);
+    try {
+      const response = await axios.get(
+        `${API}/tests/${testId}/download-solutions`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          responseType: 'blob' // Important for file download
+        }
+      );
+      
+      // Create blob link to download
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `${solutions?.test_title?.replace(/\s+/g, '_')}_Solutions.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+      
+      toast.success('PDF downloaded successfully!');
+    } catch (error) {
+      console.error('Error downloading PDF:', error);
+      toast.error(error.response?.data?.detail || 'Failed to download PDF');
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50">
