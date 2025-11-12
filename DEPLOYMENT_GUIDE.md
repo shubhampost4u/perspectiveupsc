@@ -237,19 +237,19 @@ from datetime import datetime, timezone
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 async def create_admin():
-    client = AsyncIOMotorClient("mongodb://perspectiveupsc_admin:your_secure_database_password@localhost:27017/perspectiveupsc_prod")
-    db = client.perspectiveupsc_prod
+    client = AsyncIOMotorClient("mongodb://your_db_user:your_db_password@localhost:27017/your_database")
+    db = client.your_database
     
     # Check if admin exists
-    existing_admin = await db.users.find_one({"email": "perspectiveupsc1@gmail.com"})
+    existing_admin = await db.users.find_one({"email": "admin@yourdomain.com"})
     
     if not existing_admin:
         # Create admin user
         admin_user = {
             "id": str(uuid.uuid4()),
-            "email": "perspectiveupsc1@gmail.com",
-            "name": "Perspective UPSC Admin",
-            "password_hash": pwd_context.hash("perspective@2025"),
+            "email": "admin@yourdomain.com",
+            "name": "Admin User",
+            "password_hash": pwd_context.hash("YOUR_SECURE_PASSWORD_HERE"),
             "role": "admin",
             "is_active": True,
             "created_at": datetime.now(timezone.utc),
