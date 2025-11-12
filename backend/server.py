@@ -2175,7 +2175,7 @@ async def get_recent_purchases(
 ):
     """Get recent purchase transactions"""
     try:
-        purchases = await db.purchases.find({}).sort("created_at", -1).limit(limit).to_list(None)
+        purchases = await db.purchases.find({}).sort("created_at", -1).limit(limit).to_list(limit)
         
         result = []
         for p in purchases:
