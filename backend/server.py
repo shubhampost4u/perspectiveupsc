@@ -1336,6 +1336,184 @@ async def get_test_solutions(test_id: str, current_user: User = Depends(get_curr
         "solutions": solutions
     }
 
+@api_router.get("/tests/{test_id}/download-solutions")
+async def download_test_solutions_pdf(test_id: str, current_user: User = Depends(get_current_user)):
+    """Download test solutions as PDF with watermark"""
+    if current_user.role != UserRole.STUDENT:
+        raise HTTPException(status_code=403, detail="Only students can download solutions")
+    
+    # Check if student has purchased the test
+    purchase = await db.purchases.find_one({
+        "student_id": current_user.id,
+        "test_id": test_id
+    })
+    
+    if not purchase:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You must purchase the test before downloading solutions"
+        )
+    
+    # Check if student has completed the test
+    result = await db.test_results.find_one({
+        "student_id": current_user.id,
+        "test_id": test_id
+    })
+    
+    if not result:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You must complete the test before downloading solutions"
+        )
+    
+    # Get test with questions and solutions
+    test = await db.tests.find_one({"id": test_id})
+    if not test:
+        raise HTTPException(status_code=404, detail="Test not found")
+    
+    # Create PDF
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=0.75*inch, bottomMargin=0.75*inch)
+    
+    # Container for the 'Flowable' objects
+    elements = []
+    
+    # Define styles
+    styles = getSampleStyleSheet()
+    
+    # Custom styles
+    title_style = ParagraphStyle(
+        'CustomTitle',
+        parent=styles['Heading1'],
+        fontSize=24,
+        textColor='#2563eb',
+        spaceAfter=30,
+        alignment=TA_CENTER
+    )
+    
+    watermark_style = ParagraphStyle(
+        'Watermark',
+        parent=styles['Normal'],
+        fontSize=10,
+        textColor='#9ca3af',
+        alignment=TA_CENTER,
+        spaceAfter=20
+    )
+    
+    heading_style = ParagraphStyle(
+        'CustomHeading',
+        parent=styles['Heading2'],
+        fontSize=16,
+        textColor='#1e40af',
+        spaceAfter=12,
+        spaceBefore=12
+    )
+    
+    question_style = ParagraphStyle(
+        'Question',
+        parent=styles['Normal'],
+        fontSize=12,
+        textColor='#111827',
+        spaceAfter=10,
+        alignment=TA_JUSTIFY
+    )
+    
+    option_style = ParagraphStyle(
+        'Option',
+        parent=styles['Normal'],
+        fontSize=11,
+        textColor='#374151',
+        spaceAfter=6,
+        leftIndent=20
+    )
+    
+    explanation_style = ParagraphStyle(
+        'Explanation',
+        parent=styles['Normal'],
+        fontSize=11,
+        textColor='#059669',
+        spaceAfter=15,
+        leftIndent=20,
+        alignment=TA_JUSTIFY
+    )
+    
+    # Add watermark and title
+    elements.append(Paragraph("PERSPECTIVE UPSC", watermark_style))
+    elements.append(Paragraph(f"Test Solutions: {test['title']}", title_style))
+    elements.append(Spacer(1, 0.2*inch))
+    
+    # Add test info
+    info_text = f"""<b>Student:</b> {current_user.name}<br/>
+    <b>Score:</b> {result['score']}/{result['total_questions']} 
+    ({round((result['score'] / result['total_questions']) * 100, 2)}%)<br/>
+    <b>Completed:</b> {result['completed_at'].strftime('%B %d, %Y at %I:%M %p')}"""
+    elements.append(Paragraph(info_text, styles['Normal']))
+    elements.append(Spacer(1, 0.3*inch))
+    
+    # Add divider
+    elements.append(Paragraph("<hr/>", styles['Normal']))
+    elements.append(Spacer(1, 0.2*inch))
+    
+    # Get student answers
+    student_answers = result.get("answers", [])
+    
+    # Add questions with solutions
+    for i, question in enumerate(test["questions"]):
+        # Question number and text
+        q_number = f"<b>Question {i + 1}:</b>"
+        elements.append(Paragraph(q_number, heading_style))
+        elements.append(Paragraph(question["question_text"], question_style))
+        elements.append(Spacer(1, 0.1*inch))
+        
+        # Options
+        student_answer = student_answers[i] if i < len(student_answers) else -1
+        correct_answer = question["correct_answer"]
+        
+        for j, option in enumerate(question["options"]):
+            # Mark correct answer in green, wrong answer in red
+            if j == correct_answer:
+                option_text = f'<font color="#059669"><b>✓ {chr(65+j)}. {option} (Correct Answer)</b></font>'
+            elif j == student_answer and j != correct_answer:
+                option_text = f'<font color="#dc2626">✗ {chr(65+j)}. {option} (Your Answer)</font>'
+            else:
+                option_text = f'{chr(65+j)}. {option}'
+            
+            elements.append(Paragraph(option_text, option_style))
+        
+        elements.append(Spacer(1, 0.15*inch))
+        
+        # Explanation
+        explanation = question.get("explanation", "No explanation provided")
+        explanation_text = f'<b>Explanation:</b><br/>{explanation}'
+        elements.append(Paragraph(explanation_text, explanation_style))
+        
+        # Add separator between questions
+        elements.append(Spacer(1, 0.1*inch))
+        elements.append(Paragraph("<hr/>", styles['Normal']))
+        elements.append(Spacer(1, 0.2*inch))
+    
+    # Add footer watermark
+    elements.append(Spacer(1, 0.3*inch))
+    footer_text = "© Perspective UPSC - www.perspectiveupsc.com"
+    elements.append(Paragraph(footer_text, watermark_style))
+    
+    # Build PDF
+    doc.build(elements)
+    
+    # Get PDF data
+    buffer.seek(0)
+    
+    # Return as downloadable file
+    filename = f"{test['title'].replace(' ', '_')}_Solutions.pdf"
+    
+    return StreamingResponse(
+        buffer,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"'
+        }
+    )
+
 # ===== CART ROUTES =====
 @api_router.get("/cart", response_model=CartResponse)
 async def get_cart(current_user: User = Depends(get_current_user)):
