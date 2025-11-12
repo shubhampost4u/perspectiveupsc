@@ -2107,7 +2107,7 @@ async def get_test_performance(admin: User = Depends(require_admin)):
             }}
         ]
         
-        results = await db.test_results.aggregate(pipeline).to_list(None)
+        results = await db.test_results.aggregate(pipeline).to_list(10000)
         
         performance = []
         for r in results:
